@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import { lazy, Suspense } from "react";
 
 // Layout components
@@ -22,28 +21,23 @@ import OIDetailed from "@/pages/OIDetailed";
 import OISummary from "@/pages/OISummary";
 import PCR from "@/pages/PCR";
 
-// Add dependency
-<lov-add-dependency>framer-motion@^10.16.4</lov-add-dependency>
-
 const queryClient = new QueryClient();
 
 const AnimatedRoutes = () => {
   const location = useLocation();
   
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/live-trade" element={<LiveTrade />} />
-        <Route path="/todays-trade" element={<TodaysTrade />} />
-        <Route path="/hist-trades" element={<HistTrades />} />
-        <Route path="/pcr" element={<PCR />} />
-        <Route path="/oi-detailed" element={<OIDetailed />} />
-        <Route path="/oi-summary" element={<OISummary />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AnimatePresence>
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<Login />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/live-trade" element={<LiveTrade />} />
+      <Route path="/todays-trade" element={<TodaysTrade />} />
+      <Route path="/hist-trades" element={<HistTrades />} />
+      <Route path="/pcr" element={<PCR />} />
+      <Route path="/oi-detailed" element={<OIDetailed />} />
+      <Route path="/oi-summary" element={<OISummary />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 

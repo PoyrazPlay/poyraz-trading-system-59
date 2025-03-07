@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
@@ -37,36 +36,24 @@ const Login = () => {
 
   return (
     <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <motion.div 
+      <div 
         className="w-full max-w-md space-y-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
       >
         <div className="text-center">
-          <motion.h2 
+          <h2 
             className="mt-6 text-3xl font-bold tracking-tight"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
           >
             Poyraz Trading System
-          </motion.h2>
-          <motion.p 
+          </h2>
+          <p 
             className="mt-2 text-sm text-muted-foreground"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
           >
             Sign in to access your trading dashboard
-          </motion.p>
+          </p>
         </div>
         
-        <motion.div 
+        <div 
           className="card-glass p-8 rounded-xl shadow-lg"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -106,19 +93,17 @@ const Login = () => {
             </div>
 
             <div>
-              <motion.button
+              <button
                 type="submit"
                 className="w-full btn-primary py-2.5"
                 disabled={isLoading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
-              </motion.button>
+              </button>
             </div>
           </form>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 };
