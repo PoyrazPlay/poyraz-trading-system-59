@@ -10,17 +10,43 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      // For demo purposes, accept any username/password
-      if (username && password) {
+    try {
+      // Try to call the API
+      const response = await fetch('http://localhost:5000/authenticate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
         toast({
           title: 'Login successful',
           description: 'Welcome to Poyraz Trading System',
+        });
+        navigate('/home');
+      } else {
+        toast({
+          title: 'Login failed',
+          description: data.message || 'Invalid username or password',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      
+      // Fallback to demo login if API is not available
+      if (username && password) {
+        toast({
+          title: 'Login successful (Demo Mode)',
+          description: 'API not available - using demo access',
         });
         navigate('/home');
       } else {
@@ -30,8 +56,9 @@ const Login = () => {
           variant: 'destructive',
         });
       }
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   return (
