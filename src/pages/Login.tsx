@@ -14,6 +14,17 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
+    // Check for test credentials first
+    if (username === 'test' && password === '12345') {
+      toast({
+        title: 'Login successful',
+        description: 'Welcome to Poyraz Trading System',
+      });
+      setIsLoading(false);
+      navigate('/home');
+      return;
+    }
+    
     try {
       // Try to call the API
       const response = await fetch('http://localhost:5000/authenticate', {
