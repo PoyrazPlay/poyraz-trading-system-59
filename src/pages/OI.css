@@ -1,0 +1,95 @@
+
+/* Option Chain Detailed View Styles */
+.green-cell {
+  background-color: rgba(0, 128, 0, 0.1);
+}
+
+.red-cell {
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+.centered-header {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.dropdown-container {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.styled-dropdown {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.timestamp-select,
+.strike-select {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.styled-index-ltp {
+  padding: 8px 16px;
+  background-color: #f0f4f8;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.data-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.data-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.data-table tr:hover {
+  background-color: #f0f4f8;
+}
+
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+  }
+  
+  .data-table {
+    font-size: 0.7rem;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 4px 2px;
+  }
+}
