@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import HomeLayout from '@/components/layout/HomeLayout';
 import axios from 'axios';
@@ -58,7 +57,6 @@ const OIDetailed = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fetch symbols and expiries
   useEffect(() => {
     const fetchSymbolsAndExpiries = async () => {
       setLoading(true);
@@ -78,12 +76,12 @@ const OIDetailed = () => {
           setSymbols(Object.keys(response.data));
           
           if (selectedSymbol && response.data[selectedSymbol]) {
-            setExpiries(response.data[selectedSymbol]);
+            setExpiries(response.data[selectedSymbol] || []);
           } else if (Object.keys(response.data).length > 0) {
             // Set default selected symbol
             const firstSymbol = Object.keys(response.data)[0];
             setSelectedSymbol(firstSymbol);
-            setExpiries(response.data[firstSymbol]);
+            setExpiries(response.data[firstSymbol] || []);
           }
         } catch (apiError) {
           console.error("Using mock data due to API error:", apiError);
@@ -91,11 +89,11 @@ const OIDetailed = () => {
           setSymbols(Object.keys(mockResponse.data));
           
           if (selectedSymbol && mockResponse.data[selectedSymbol]) {
-            setExpiries(mockResponse.data[selectedSymbol]);
+            setExpiries(mockResponse.data[selectedSymbol] || []);
           } else if (Object.keys(mockResponse.data).length > 0) {
             const firstSymbol = Object.keys(mockResponse.data)[0];
             setSelectedSymbol(firstSymbol);
-            setExpiries(mockResponse.data[firstSymbol]);
+            setExpiries(mockResponse.data[firstSymbol] || []);
           }
           
           toast({
@@ -120,7 +118,6 @@ const OIDetailed = () => {
     fetchSymbolsAndExpiries();
   }, []);
 
-  // Update expiries when symbol changes
   useEffect(() => {
     if (selectedSymbol) {
       setLoading(true);
@@ -152,7 +149,6 @@ const OIDetailed = () => {
     }
   }, [selectedSymbol]);
 
-  // Fetch available dates when symbol and expiry are selected
   useEffect(() => {
     if (selectedSymbol && selectedExpiry) {
       setLoading(true);
@@ -177,7 +173,6 @@ const OIDetailed = () => {
     }
   }, [selectedSymbol, selectedExpiry]);
 
-  // Fetch available times when date is selected
   useEffect(() => {
     if (selectedDate && selectedSymbol && selectedExpiry) {
       setLoading(true);
@@ -201,7 +196,6 @@ const OIDetailed = () => {
     }
   }, [selectedDate, selectedSymbol, selectedExpiry]);
 
-  // Fetch option chain data when all selections are made
   useEffect(() => {
     if (selectedSymbol && selectedExpiry && selectedDate && selectedTime) {
       setLoading(true);
@@ -252,7 +246,6 @@ const OIDetailed = () => {
     }
   }, [selectedSymbol, selectedExpiry, selectedDate, selectedTime]);
 
-  // Update selected strikes when data changes
   useEffect(() => {
     if (data.length > 0 && data[0].values.length > 0) {
       const allStrikes = [...new Set(data[0].values.map(item => item.strike_price.toString()))];
@@ -317,13 +310,11 @@ const OIDetailed = () => {
     setSelectedStrikes(newSelectedStrikes);
   };
 
-  // Generate mock data for demonstration when API is unavailable
   const generateMockData = (symbol: string, date: string, time: string): DataEntry => {
     const indexLTP = symbol === 'NIFTY' ? 24300 : symbol === 'BANKNIFTY' ? 51200 : 22800;
     const baseStrike = Math.round(indexLTP / 100) * 100;
     const strikes = [];
     
-    // Generate strikes around ATM
     for (let i = -10; i <= 10; i++) {
       strikes.push(baseStrike + (i * 100));
     }
@@ -332,7 +323,6 @@ const OIDetailed = () => {
       const ceOptionPosition = strike < indexLTP ? "ITM" : "OTM";
       const peOptionPosition = strike > indexLTP ? "ITM" : "OTM";
       
-      // Generate CE option
       const ce = {
         id: `${symbol}_${date}_${strike}_CE`,
         strike_price: strike,
@@ -350,7 +340,6 @@ const OIDetailed = () => {
         option_type: "CE"
       };
       
-      // Generate PE option
       const pe = {
         id: `${symbol}_${date}_${strike}_PE`,
         strike_price: strike,
@@ -397,7 +386,6 @@ const OIDetailed = () => {
 
   const groupedData: Record<string, { CE: Partial<OptionData>, PE: Partial<OptionData> }> = {};
   
-  // Group data by strike price
   sortedData.forEach(item => {
     const strikeKey = item.strike_price.toString();
     if (!groupedData[strikeKey]) {
