@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import HomeLayout from '@/components/layout/HomeLayout';
 import axios from 'axios';
@@ -73,15 +74,29 @@ const OIDetailed = () => {
         try {
           // Try to fetch from API
           const response = await axios.get('/option_chain_symbols_expiries');
-          setSymbols(Object.keys(response.data));
+          console.log("API Response:", response.data);
           
-          if (selectedSymbol && response.data[selectedSymbol]) {
-            setExpiries(response.data[selectedSymbol] || []);
-          } else if (Object.keys(response.data).length > 0) {
-            // Set default selected symbol
-            const firstSymbol = Object.keys(response.data)[0];
-            setSelectedSymbol(firstSymbol);
-            setExpiries(response.data[firstSymbol] || []);
+          if (response.data && typeof response.data === 'object') {
+            setSymbols(Object.keys(response.data));
+            
+            if (selectedSymbol && response.data[selectedSymbol]) {
+              // Ensure expiries is always an array
+              const expiriesData = Array.isArray(response.data[selectedSymbol]) 
+                ? response.data[selectedSymbol] 
+                : [];
+              setExpiries(expiriesData);
+            } else if (Object.keys(response.data).length > 0) {
+              // Set default selected symbol
+              const firstSymbol = Object.keys(response.data)[0];
+              setSelectedSymbol(firstSymbol);
+              // Ensure expiries is always an array
+              const expiriesData = Array.isArray(response.data[firstSymbol]) 
+                ? response.data[firstSymbol] 
+                : [];
+              setExpiries(expiriesData);
+            }
+          } else {
+            throw new Error("Invalid API response");
           }
         } catch (apiError) {
           console.error("Using mock data due to API error:", apiError);
@@ -125,14 +140,28 @@ const OIDetailed = () => {
       const fetchExpiries = async () => {
         try {
           const response = await axios.get('/option_chain_symbols_expiries');
-          if (response.data[selectedSymbol]) {
-            setExpiries(response.data[selectedSymbol]);
-            if (response.data[selectedSymbol].length > 0) {
-              setSelectedExpiry(response.data[selectedSymbol][0]);
+          console.log("Fetch expiries for symbol:", selectedSymbol, response.data);
+          
+          if (response.data && response.data[selectedSymbol]) {
+            // Ensure expiries is always an array
+            const expiriesData = Array.isArray(response.data[selectedSymbol]) 
+                ? response.data[selectedSymbol] 
+                : [];
+            setExpiries(expiriesData);
+            
+            if (expiriesData.length > 0) {
+              setSelectedExpiry(expiriesData[0]);
             }
           } else {
-            setExpiries([]);
-            setSelectedExpiry('');
+            // Use mock data
+            setExpiries(['25-JUL-2024', '29-AUG-2024', '26-SEP-2024']);
+            setSelectedExpiry('25-JUL-2024');
+            
+            toast({
+              title: "Using demo expiries",
+              description: "Could not fetch expiries from API. Using demonstration data.",
+              duration: 5000,
+            });
           }
         } catch (error) {
           console.error("Error fetching expiries:", error);
@@ -156,14 +185,33 @@ const OIDetailed = () => {
       const fetchDates = async () => {
         try {
           const response = await axios.get(`/available_dates_times?symbol=${selectedSymbol}&expiry=${selectedExpiry}`);
-          setDates(response.data.dates);
-          setSelectedDate('');
-          setSelectedTime('');
+          console.log("Fetch dates response:", response.data);
+          
+          if (response.data && response.data.dates && Array.isArray(response.data.dates)) {
+            setDates(response.data.dates);
+            if (response.data.dates.length > 0) {
+              setSelectedDate(response.data.dates[0]);
+            } else {
+              setSelectedDate('');
+            }
+          } else {
+            // Mock dates
+            const mockDates = ['2024-07-19', '2024-07-18', '2024-07-17'];
+            setDates(mockDates);
+            setSelectedDate(mockDates[0]);
+            
+            toast({
+              title: "Using demo dates",
+              description: "Could not fetch dates from API. Using demonstration data.",
+              duration: 5000,
+            });
+          }
         } catch (error) {
           console.error('Error fetching dates:', error);
           // Mock dates
           const mockDates = ['2024-07-19', '2024-07-18', '2024-07-17'];
           setDates(mockDates);
+          setSelectedDate(mockDates[0]);
         } finally {
           setLoading(false);
         }
@@ -180,13 +228,33 @@ const OIDetailed = () => {
       const fetchTimes = async () => {
         try {
           const response = await axios.get(`/available_times?symbol=${selectedSymbol}&expiry=${selectedExpiry}&date=${selectedDate}`);
-          setTimes(response.data.times);
-          setSelectedTime('');
+          console.log("Fetch times response:", response.data);
+          
+          if (response.data && response.data.times && Array.isArray(response.data.times)) {
+            setTimes(response.data.times);
+            if (response.data.times.length > 0) {
+              setSelectedTime(response.data.times[0]);
+            } else {
+              setSelectedTime('');
+            }
+          } else {
+            // Mock times
+            const mockTimes = ['09:30:00', '10:30:00', '11:30:00', '12:30:00', '13:30:00', '14:30:00', '15:15:00'];
+            setTimes(mockTimes);
+            setSelectedTime(mockTimes[0]);
+            
+            toast({
+              title: "Using demo times",
+              description: "Could not fetch times from API. Using demonstration data.",
+              duration: 5000,
+            });
+          }
         } catch (error) {
           console.error('Error fetching times:', error);
           // Mock times
           const mockTimes = ['09:30:00', '10:30:00', '11:30:00', '12:30:00', '13:30:00', '14:30:00', '15:15:00'];
           setTimes(mockTimes);
+          setSelectedTime(mockTimes[0]);
         } finally {
           setLoading(false);
         }
@@ -206,18 +274,24 @@ const OIDetailed = () => {
           const response = await axios.get('/option_chain_data', {
             params: { symbol: selectedSymbol, expiry: selectedExpiry, date: selectedDate, time: selectedTime }
           });
-          const optionChainData = response.data;
-          const formattedData = Object.entries(optionChainData).map(([id, details]: [string, any]) => ({
-            id,
-            ...new OptionData(details),
-          }));
-        
-          setData([{ date: selectedDate, time: selectedTime, values: formattedData }]);
-        
-          if (formattedData.length > 0) {
-            setSelectedStrikes(formattedData.map(item => item.strike_price.toString()));
+          console.log("Fetching option chain data", response.data);
+          
+          if (response.data && typeof response.data === 'object') {
+            const optionChainData = response.data;
+            const formattedData = Object.entries(optionChainData).map(([id, details]: [string, any]) => ({
+              id,
+              ...new OptionData(details),
+            }));
+          
+            setData([{ date: selectedDate, time: selectedTime, values: formattedData }]);
+          
+            if (formattedData.length > 0) {
+              setSelectedStrikes(formattedData.map(item => item.strike_price.toString()));
+            } else {
+              setSelectedStrikes([]);
+            }
           } else {
-            setSelectedStrikes([]);
+            throw new Error("Invalid option chain data response");
           }
         } catch (error) {
           console.error("Error fetching option chain data:", error);
@@ -427,7 +501,7 @@ const OIDetailed = () => {
                   disabled={loading || expiries.length === 0}
                 >
                   <option value="">Select Expiry</option>
-                  {expiries.map(expiry => (
+                  {Array.isArray(expiries) && expiries.map(expiry => (
                     <option key={expiry} value={expiry}>{expiry}</option>
                   ))}
                 </select>

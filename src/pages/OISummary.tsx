@@ -168,43 +168,38 @@ const OISummary = () => {
         const response = await axios.get('/option_chain_symbols_expiries');
         console.log("Fetched Symbols and Expiries:", response.data);
         
-        if (Object.keys(response.data).length === 0) {
-          // Use demo data if API returns empty data
-          setSymbols(['NIFTY', 'BANKNIFTY']);
-          if (selectedSymbol === 'NIFTY' || selectedSymbol === '') {
-            setExpiries(['29-Sep-2023', '26-Oct-2023']);
-          } else {
-            setExpiries(['28-Sep-2023', '25-Oct-2023']);
+        if (response.data && typeof response.data === 'object') {
+          setSymbols(Object.keys(response.data));
+          
+          if (selectedSymbol && response.data[selectedSymbol]) {
+            // Ensure expiries is always an array
+            const expiriesData = Array.isArray(response.data[selectedSymbol]) 
+              ? response.data[selectedSymbol] 
+              : [];
+            setExpiries(expiriesData);
+          } else if (Object.keys(response.data).length > 0) {
+            const firstSymbol = Object.keys(response.data)[0];
+            setSelectedSymbol(firstSymbol);
+            // Ensure expiries is always an array
+            const expiriesData = Array.isArray(response.data[firstSymbol]) 
+              ? response.data[firstSymbol] 
+              : [];
+            setExpiries(expiriesData);
           }
+        } else {
+          // Use demo data if API returns invalid data
+          setSymbols(['NIFTY', 'BANKNIFTY']);
+          setExpiries(['29-Sep-2023', '26-Oct-2023']);
           
           if (!selectedSymbol) {
             setSelectedSymbol('NIFTY');
           }
           
-          if (!selectedExpiry && (selectedSymbol === 'NIFTY' || selectedSymbol === '')) {
-            setSelectedExpiry('29-Sep-2023');
-          }
-          
           toast({
             title: "Using demo data",
-            description: "Could not connect to the API. Using demonstration data instead.",
+            description: "Invalid response from API. Using demonstration data instead.",
             variant: "destructive",
           });
-        } else {
-          setSymbols(Object.keys(response.data));
-          if (selectedSymbol) {
-            setExpiries(response.data[selectedSymbol] || []);
-            if (response.data[selectedSymbol] && response.data[selectedSymbol].length > 0 && !selectedExpiry) {
-              setSelectedExpiry(response.data[selectedSymbol][0]);
-            }
-          } else if (Object.keys(response.data).length > 0) {
-            const firstSymbol = Object.keys(response.data)[0];
-            setSelectedSymbol(firstSymbol);
-            setExpiries(response.data[firstSymbol] || []);
-            if (response.data[firstSymbol] && response.data[firstSymbol].length > 0) {
-              setSelectedExpiry(response.data[firstSymbol][0]);
-            }
-          }
         }
       } catch (error) {
         console.error("Error fetching symbols and expiries:", error);
@@ -216,10 +211,6 @@ const OISummary = () => {
         
         if (!selectedSymbol) {
           setSelectedSymbol('NIFTY');
-        }
-        
-        if (!selectedExpiry) {
-          setSelectedExpiry('29-Sep-2023');
         }
         
         toast({
@@ -248,7 +239,10 @@ const OISummary = () => {
         });
         console.log("Fetched Available Dates:", response.data);
         
-        if (!response.data.dates || response.data.dates.length === 0) {
+        if (response.data && response.data.dates && Array.isArray(response.data.dates) && response.data.dates.length > 0) {
+          setAvailableDates(response.data.dates);
+          setSelectedDate(response.data.dates[0]);
+        } else {
           // Use demo dates if API returns empty data
           setAvailableDates(['2023-09-01', '2023-09-02']);
           setSelectedDate('2023-09-01');
@@ -257,11 +251,6 @@ const OISummary = () => {
             title: "Using demo dates",
             description: "No dates available from API. Using demonstration dates.",
           });
-        } else {
-          setAvailableDates(response.data.dates);
-          if (response.data.dates.length > 0) {
-            setSelectedDate(response.data.dates[0]);
-          }
         }
       } catch (error) {
         console.error("Error fetching available dates:", error);
@@ -297,20 +286,7 @@ const OISummary = () => {
         });
         console.log("Fetched Data:", response.data);
   
-        if (Object.keys(response.data).length === 0) {
-          // Use demo data if API returns empty
-          const formattedDemoData = Object.entries(demoData).map(([timestamp, values]) => ({
-            timestamp,
-            ...new OptionData(values),
-          }));
-          
-          setData(formattedDemoData);
-          
-          toast({
-            title: "Using demo data",
-            description: "No data available from API. Using demonstration data.",
-          });
-        } else {
+        if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
           // Convert data into an array format
           const formattedData = Object.entries(response.data).map(([timestamp, values]) => ({
             timestamp,
@@ -322,6 +298,19 @@ const OISummary = () => {
           toast({
             title: "Data Loaded",
             description: `Loaded ${formattedData.length} records for ${selectedSymbol} with expiry ${selectedExpiry}`,
+          });
+        } else {
+          // Use demo data if API returns empty
+          const formattedDemoData = Object.entries(demoData).map(([timestamp, values]) => ({
+            timestamp,
+            ...new OptionData(values),
+          }));
+          
+          setData(formattedDemoData);
+          
+          toast({
+            title: "Using demo data",
+            description: "No data available from API. Using demonstration data.",
           });
         }
       } catch (error) {
@@ -416,7 +405,7 @@ const OISummary = () => {
               disabled={isLoading || !selectedSymbol}
             >
               <option value="">Select Expiry</option>
-              {expiries.map(expiry => (
+              {Array.isArray(expiries) && expiries.map(expiry => (
                 <option key={expiry} value={expiry}>{expiry}</option>
               ))}
             </select>
