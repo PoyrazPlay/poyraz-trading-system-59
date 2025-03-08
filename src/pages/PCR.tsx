@@ -7,10 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 const PCR = () => {
   const [symbol, setSymbol] = useState('');
   const [expiry, setExpiry] = useState('');
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<Record<string, { volume_pcr: string }> | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
-  const [symbols, setSymbols] = useState([]);
-  const [expiries, setExpiries] = useState([]);
+  const [symbols, setSymbols] = useState<string[]>([]);
+  const [expiries, setExpiries] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -88,7 +88,7 @@ const PCR = () => {
 
   // Generate mock data for demo purposes
   const generateMockPCRData = () => {
-    const mockData = {};
+    const mockData: Record<string, { volume_pcr: string }> = {};
     const today = new Date();
     
     for (let i = 0; i < 24; i++) {
@@ -108,11 +108,11 @@ const PCR = () => {
     return mockData;
   };
 
-  const handleDateChange = (event) => {
+  const handleDateChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedDate(event.target.value);
   };
 
-  const handleSymbolChange = (event) => {
+  const handleSymbolChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newSymbol = event.target.value;
     setSymbol(newSymbol);
     
@@ -133,7 +133,7 @@ const PCR = () => {
     }
   };
 
-  const handleExpiryChange = (event) => {
+  const handleExpiryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setExpiry(event.target.value);
   };
 
