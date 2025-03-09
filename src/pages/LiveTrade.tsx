@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon, ActivityIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -62,7 +62,7 @@ const LiveTrade = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/live_trade');
+        const response = await fetch('http://localhost:5000/live_trade');
         
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
@@ -129,7 +129,7 @@ const LiveTrade = () => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-7xl mb-6">
         {/* Market Status Card */}
         <Card className={`${data.market_open ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-rose-50 dark:bg-rose-900/20'} transition-all card-hover`}>
           <CardHeader className="pb-2">
@@ -142,8 +142,20 @@ const LiveTrade = () => {
             <p className={`text-2xl font-bold ${data.market_open ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {data.market_open ? 'OPEN' : 'CLOSED'}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Trade Status: {data.trade_status}
+          </CardContent>
+        </Card>
+
+        {/* Trade Status Card - New separate card */}
+        <Card className={`${data.trade_status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''} transition-all card-hover`}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ActivityIcon className="h-4 w-4" />
+              Trade Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className={`text-2xl font-bold ${data.trade_status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>
+              {data.trade_status}
             </p>
           </CardContent>
         </Card>
