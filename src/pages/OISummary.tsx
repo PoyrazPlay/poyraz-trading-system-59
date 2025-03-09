@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import { useToast } from "@/hooks/use-toast";
@@ -89,7 +88,6 @@ interface DataItem extends OptionData {
   timestamp: string;
 }
 
-// Demo data for testing when API is not available
 const demoData: Record<string, OptionDataDetails> = {
   "2023-09-01 10:00:00": {
     PCR_OI: 1.2,
@@ -165,14 +163,13 @@ const OISummary = () => {
       setError(null);
       
       try {
-        const response = await axios.get('/option_chain_symbols_expiries');
+        const response = await axios.get('http://localhost:5000/option_chain_symbols_expiries');
         console.log("Fetched Symbols and Expiries:", response.data);
         
         if (response.data && typeof response.data === 'object') {
           setSymbols(Object.keys(response.data));
           
           if (selectedSymbol && response.data[selectedSymbol]) {
-            // Ensure expiries is always an array
             const expiriesData = Array.isArray(response.data[selectedSymbol]) 
               ? response.data[selectedSymbol] 
               : [];
@@ -180,14 +177,12 @@ const OISummary = () => {
           } else if (Object.keys(response.data).length > 0) {
             const firstSymbol = Object.keys(response.data)[0];
             setSelectedSymbol(firstSymbol);
-            // Ensure expiries is always an array
             const expiriesData = Array.isArray(response.data[firstSymbol]) 
               ? response.data[firstSymbol] 
               : [];
             setExpiries(expiriesData);
           }
         } else {
-          // Use demo data if API returns invalid data
           setSymbols(['NIFTY', 'BANKNIFTY']);
           setExpiries(['29-Sep-2023', '26-Oct-2023']);
           
@@ -205,7 +200,6 @@ const OISummary = () => {
         console.error("Error fetching symbols and expiries:", error);
         setError("Failed to load symbols and expiries. Using demo data.");
         
-        // Use demo data as fallback
         setSymbols(['NIFTY', 'BANKNIFTY']);
         setExpiries(['29-Sep-2023', '26-Oct-2023']);
         
@@ -234,7 +228,7 @@ const OISummary = () => {
       setError(null);
   
       try {
-        const response = await axios.get('/available_dates_times', {
+        const response = await axios.get('http://localhost:5000/available_dates_times', {
           params: { symbol: selectedSymbol, expiry: selectedExpiry }
         });
         console.log("Fetched Available Dates:", response.data);
@@ -243,7 +237,6 @@ const OISummary = () => {
           setAvailableDates(response.data.dates);
           setSelectedDate(response.data.dates[0]);
         } else {
-          // Use demo dates if API returns empty data
           setAvailableDates(['2023-09-01', '2023-09-02']);
           setSelectedDate('2023-09-01');
           
@@ -256,7 +249,6 @@ const OISummary = () => {
         console.error("Error fetching available dates:", error);
         setError("Failed to load available dates. Using demo dates.");
         
-        // Use demo dates as fallback
         setAvailableDates(['2023-09-01', '2023-09-02']);
         setSelectedDate('2023-09-01');
         
@@ -281,13 +273,12 @@ const OISummary = () => {
       setError(null);
   
       try {
-        const response = await axios.get('/option_chain_summary', {
+        const response = await axios.get('http://localhost:5000/option_chain_summary', {
           params: { symbol: selectedSymbol, expiry: selectedExpiry, selected_date: selectedDate }
         });
         console.log("Fetched Data:", response.data);
   
         if (response.data && typeof response.data === 'object' && Object.keys(response.data).length > 0) {
-          // Convert data into an array format
           const formattedData = Object.entries(response.data).map(([timestamp, values]) => ({
             timestamp,
             ...new OptionData(values as OptionDataDetails),
@@ -300,7 +291,6 @@ const OISummary = () => {
             description: `Loaded ${formattedData.length} records for ${selectedSymbol} with expiry ${selectedExpiry}`,
           });
         } else {
-          // Use demo data if API returns empty
           const formattedDemoData = Object.entries(demoData).map(([timestamp, values]) => ({
             timestamp,
             ...new OptionData(values),
@@ -317,7 +307,6 @@ const OISummary = () => {
         console.error("Error fetching option chain data:", error);
         setError("Failed to load option chain data. Using demo data.");
         
-        // Use demo data as fallback
         const formattedDemoData = Object.entries(demoData).map(([timestamp, values]) => ({
           timestamp,
           ...new OptionData(values),
@@ -378,57 +367,56 @@ const OISummary = () => {
           </Alert>
         )}
         
-        <div className="dropdown-container">
-          <label>
-            Symbol:
-            <select 
-              className="styled-dropdown"
-              value={selectedSymbol} 
-              onChange={(e) => setSelectedSymbol(e.target.value)}
-              disabled={isLoading}
-            >
-              <option value="">Select Symbol</option>
-              {symbols.map(symbol => (
-                <option key={symbol} value={symbol}>{symbol}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        
-        <div className="dropdown-container">
-          <label>
-            Expiry:
-            <select 
-              className="styled-dropdown"
-              value={selectedExpiry} 
-              onChange={(e) => setSelectedExpiry(e.target.value)}
-              disabled={isLoading || !selectedSymbol}
-            >
-              <option value="">Select Expiry</option>
-              {Array.isArray(expiries) && expiries.map(expiry => (
-                <option key={expiry} value={expiry}>{expiry}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        
-        <div className="filters-row">
-          <div className="timestamp-select">
-            <label htmlFor="date-select">Select Date: </label>
-            <select 
-              id="date-select" 
-              value={selectedDate} 
-              onChange={handleDateChange}
-              disabled={isLoading || !selectedSymbol || !selectedExpiry}
-              className="styled-dropdown"
-            >
-              <option value="">Select Date</option>
-              {availableDates.map((date) => (
-                <option key={date} value={date}>
-                  {date}
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          <div className="flex-shrink-0">
+            <label className="inline-flex items-center">
+              Symbol:
+              <select 
+                className="styled-dropdown ml-2"
+                value={selectedSymbol} 
+                onChange={(e) => setSelectedSymbol(e.target.value)}
+                disabled={isLoading}
+              >
+                <option value="">Select Symbol</option>
+                {symbols.map(symbol => (
+                  <option key={symbol} value={symbol}>{symbol}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          
+          <div className="flex-shrink-0">
+            <label className="inline-flex items-center">
+              Expiry:
+              <select 
+                className="styled-dropdown ml-2"
+                value={selectedExpiry} 
+                onChange={(e) => setSelectedExpiry(e.target.value)}
+                disabled={isLoading || !selectedSymbol}
+              >
+                <option value="">Select Expiry</option>
+                {Array.isArray(expiries) && expiries.map(expiry => (
+                  <option key={expiry} value={expiry}>{expiry}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          
+          <div className="flex-shrink-0">
+            <label className="inline-flex items-center">
+              Date:
+              <select 
+                className="styled-dropdown ml-2"
+                value={selectedDate} 
+                onChange={handleDateChange}
+                disabled={isLoading || !selectedSymbol || !selectedExpiry}
+              >
+                <option value="">Select Date</option>
+                {availableDates.map((date) => (
+                  <option key={date} value={date}>{date}</option>
+                ))}
+              </select>
+            </label>
           </div>
         </div>
         
