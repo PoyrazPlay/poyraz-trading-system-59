@@ -13,7 +13,8 @@ import {
   ComposedChart,
   Bar,
   Line,
-  Legend
+  Legend,
+  ReferenceLine
 } from 'recharts';
 import { CandlestickChart, Clock, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -73,35 +74,39 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 // Custom component for rendering candlesticks
-const CandleStickComponent = (props: any) => {
-  const { x, width, y, height, open, close, high, low, index } = props;
+const Candle = (props: any) => {
+  const { x, y, width, height, low, high, open, close } = props;
   
-  // Calculate center of the candle
-  const xCenter = x + width / 2;
+  // Calculate the body start and end positions
+  const bodyY = Math.min(open, close);
+  const bodyHeight = Math.abs(close - open);
   
   // Determine if bullish or bearish
   const isBullish = close > open;
   const fill = isBullish ? '#10b981' : '#ef4444';
   
+  // The center of the candle for drawing the wicks
+  const centerX = x + width / 2;
+  
   return (
-    <g key={`candle-${index}`}>
-      {/* Draw the high/low wick */}
+    <g>
+      {/* Draw the high/low line (the wick) */}
       <line 
-        x1={xCenter} 
+        x1={centerX} 
+        x2={centerX} 
         y1={y} 
-        x2={xCenter} 
         y2={y + height} 
         stroke={fill} 
-        strokeWidth={1}
+        strokeWidth={1} 
       />
       
-      {/* Draw the candle body */}
+      {/* Draw the body */}
       <rect 
         x={x} 
-        y={isBullish ? y + height * (high - close) / (high - low) : y + height * (high - open) / (high - low)}
+        y={y + (isBullish ? height - bodyHeight : 0)} 
         width={width} 
-        height={Math.max(1, Math.abs(height * (close - open) / (high - low)))}
-        fill={fill}
+        height={bodyHeight || 1} // Ensure at least 1px height
+        fill={fill} 
       />
     </g>
   );
@@ -121,14 +126,45 @@ const OHLCAnalysis: React.FC = () => {
 
   const ohlcData = data || demoData;
 
-  // Format data for the chart
-  const chartData = ohlcData.map(item => ({
-    ...item,
-    // Format date for display
-    displayDate: item.date.split(' ')[1],
-    // For candlestick rendering
-    isBullish: item.close > item.open
-  }));
+  // Custom renderer for candlesticks
+  const renderCandlestick = (props: any) => {
+    const { x, y, width, height, index, payload } = props;
+    const data = payload;
+    
+    return (
+      <Candle
+        key={`candle-${index}`}
+        x={x - width / 2}
+        y={y}
+        width={width * 0.8}
+        height={height}
+        open={data.open}
+        close={data.close}
+        high={data.high}
+        low={data.low}
+      />
+    );
+  };
+
+  // Process data for chart
+  const chartData = ohlcData.map((item, index) => {
+    const bullish = item.close > item.open;
+    
+    return {
+      ...item,
+      index,
+      displayDate: item.date.split(' ')[1], // Extract only time part
+      // Scale values for visualization
+      highLowRange: item.high - item.low, // Used for y-axis domain calculation
+      // For custom candlestick rendering
+      candleStartY: bullish ? item.open : item.close,
+      candleEndY: bullish ? item.close : item.open,
+    };
+  });
+
+  // Calculate domain for y-axis
+  const yMin = Math.min(...chartData.map(d => d.low)) * 0.9998;
+  const yMax = Math.max(...chartData.map(d => d.high)) * 1.0002;
 
   if (isLoading) {
     return (
@@ -164,32 +200,33 @@ const OHLCAnalysis: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
               >
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="displayDate" />
+                <XAxis 
+                  dataKey="displayDate" 
+                  scale="band" 
+                  padding={{ left: 10, right: 10 }} 
+                />
                 <YAxis 
-                  yAxisId="price" 
-                  domain={['dataMin', 'dataMax']} 
-                  tickCount={7}
-                  allowDecimals={false}
+                  domain={[yMin, yMax]} 
+                  tickCount={7} 
+                  allowDecimals={true} 
+                  tickFormatter={(value) => value.toFixed(1)}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
-                {/* Render custom candlesticks */}
                 {chartData.map((entry, index) => (
-                  <CandleStickComponent
-                    key={`candle-${index}`}
-                    x={index * (800 / chartData.length) + 50}
-                    width={15}
-                    y={50}
-                    height={300}
-                    open={entry.open}
-                    close={entry.close}
-                    high={entry.high}
-                    low={entry.low}
-                    index={index}
-                  />
+                  <g key={`candle-${index}`}>
+                    {renderCandlestick({
+                      x: 50 + index * 30, // Base position + index * width
+                      y: 50, // Base Y position
+                      width: 20, // Candle width
+                      height: 300, // Chart height
+                      index,
+                      payload: entry
+                    })}
+                  </g>
                 ))}
               </ComposedChart>
             </ResponsiveContainer>
@@ -224,12 +261,6 @@ const OHLCAnalysis: React.FC = () => {
                   <th className="py-3 px-2 text-right font-medium">Low</th>
                   <th className="py-3 px-2 text-right font-medium">Close</th>
                   <th className="py-3 px-2 text-right font-medium">Volume</th>
-                  <th className="py-3 px-2 text-right font-medium">ATR</th>
-                  <th className="py-3 px-2 text-center font-medium">HA Color</th>
-                  <th className="py-3 px-2 text-right font-medium">Volatility</th>
-                  <th className="py-3 px-2 text-right font-medium">ADX</th>
-                  <th className="py-3 px-2 text-right font-medium">ADX+</th>
-                  <th className="py-3 px-2 text-right font-medium">ADX-</th>
                 </tr>
               </thead>
               <tbody>
@@ -241,14 +272,6 @@ const OHLCAnalysis: React.FC = () => {
                     <td className="py-2 px-2 text-right">{row.low.toFixed(2)}</td>
                     <td className="py-2 px-2 text-right">{row.close.toFixed(2)}</td>
                     <td className="py-2 px-2 text-right">{row.volume}</td>
-                    <td className="py-2 px-2 text-right">{row.atr.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-center">
-                      <span className={`inline-block w-6 h-6 rounded-full ${row.ha_color === 'red' ? 'bg-red-500' : 'bg-green-500'}`}></span>
-                    </td>
-                    <td className="py-2 px-2 text-right">{row.volatility_b.toFixed(6)}</td>
-                    <td className="py-2 px-2 text-right">{row.trend_adx}</td>
-                    <td className="py-2 px-2 text-right">{row.trend_adx_pos}</td>
-                    <td className="py-2 px-2 text-right">{row.trend_adx_neg}</td>
                   </tr>
                 ))}
               </tbody>
