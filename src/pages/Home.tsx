@@ -2,7 +2,7 @@
 import React from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import MenuCard from '@/components/ui/menu-card';
-import { LineChart, BarChart, PieChart, Activity, TrendingUp, Calendar, Eye, History, HelpCircle } from 'lucide-react';
+import { LineChart, BarChart, PieChart, Activity, TrendingUp, Calendar, Eye, History, HelpCircle, FileText, CandlestickChart } from 'lucide-react';
 
 const Home = () => {
   const tradingOptions = [
@@ -23,6 +23,12 @@ const Home = () => {
       path: "/hist-trades", 
       icon: <History />,
       description: "Access past trading records and analysis"
+    },
+    { 
+      title: "Execution Logs", 
+      path: "/execution-logs", 
+      icon: <FileText />,
+      description: "View detailed execution logs and errors"
     }
   ];
 
@@ -44,6 +50,12 @@ const Home = () => {
       path: "/pcr", 
       icon: <PieChart />,
       description: "Put/Call ratio visualization"
+    },
+    { 
+      title: "OHLC Analysis", 
+      path: "/ohlc-analysis", 
+      icon: <CandlestickChart />,
+      description: "Candlestick charts and technical indicators"
     }
   ];
 

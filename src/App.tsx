@@ -20,6 +20,8 @@ import HistTrades from "@/pages/HistTrades";
 import OIDetailed from "@/pages/OIDetailed";
 import OISummary from "@/pages/OISummary";
 import PCR from "@/pages/PCR";
+import OHLCAnalysis from "@/pages/OHLCAnalysis";
+import ExecutionLogs from "@/pages/ExecutionLogs";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const AnimatedRoutes = () => {
       <Route path="/pcr" element={<PCR />} />
       <Route path="/oi-detailed" element={<OIDetailed />} />
       <Route path="/oi-summary" element={<OISummary />} />
+      <Route path="/ohlc-analysis" element={<OHLCAnalysis />} />
+      <Route path="/execution-logs" element={<ExecutionLogs />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
