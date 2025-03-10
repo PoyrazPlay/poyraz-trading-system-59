@@ -85,7 +85,8 @@ const ExecutionLogs: React.FC = () => {
       case 'error':
         return <Badge variant="destructive">{level}</Badge>;
       case 'warning':
-        return <Badge variant="warning" className="bg-yellow-500">{level}</Badge>;
+        // Changed from 'warning' to 'secondary' with custom yellow styling
+        return <Badge variant="secondary" className="bg-yellow-500 hover:bg-yellow-600">{level}</Badge>;
       case 'info':
         return <Badge variant="default">{level}</Badge>;
       case 'debug':
