@@ -66,46 +66,42 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           <div>Low: <span className="font-medium">{data.low.toFixed(2)}</span></div>
           <div>Close: <span className="font-medium">{data.close.toFixed(2)}</span></div>
         </div>
-        <div className="mt-1 text-sm">
-          <div>ATR: <span className="font-medium">{data.atr.toFixed(2)}</span></div>
-          <div>Volatility: <span className="font-medium">{data.volatility_b.toFixed(4)}</span></div>
-        </div>
       </Card>
     );
   }
   return null;
 };
 
-// A simple CandleStick component using rectangles
-const CandleStick = (props: any) => {
-  const { x, y, width, height, payload } = props;
-  const { open, close, high, low } = payload;
+// Custom component for rendering candlesticks
+const CandleStickComponent = (props: any) => {
+  const { x, width, y, height, open, close, high, low, index } = props;
   
-  // Calculate positions based on the values not using props.yAxis.scale
-  // Instead we'll use the y value directly provided by recharts
-  const fill = close > open ? '#10b981' : '#ef4444';
+  // Calculate center of the candle
   const xCenter = x + width / 2;
   
-  // Use svg elements directly without calculations that rely on yAxis.scale
+  // Determine if bullish or bearish
+  const isBullish = close > open;
+  const fill = isBullish ? '#10b981' : '#ef4444';
+  
   return (
-    <g>
-      {/* Wick */}
-      <line
-        x1={xCenter}
-        x2={xCenter}
-        y1={y}
-        y2={y + height}
-        stroke={fill}
+    <g key={`candle-${index}`}>
+      {/* Draw the high/low wick */}
+      <line 
+        x1={xCenter} 
+        y1={y} 
+        x2={xCenter} 
+        y2={y + height} 
+        stroke={fill} 
         strokeWidth={1}
       />
-      {/* Candle body */}
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
+      
+      {/* Draw the candle body */}
+      <rect 
+        x={x} 
+        y={isBullish ? y + height * (high - close) / (high - low) : y + height * (high - open) / (high - low)}
+        width={width} 
+        height={Math.max(1, Math.abs(height * (close - open) / (high - low)))}
         fill={fill}
-        stroke={fill}
       />
     </g>
   );
@@ -125,16 +121,12 @@ const OHLCAnalysis: React.FC = () => {
 
   const ohlcData = data || demoData;
 
-  // Format data for the chart - simplify to avoid custom calculations
+  // Format data for the chart
   const chartData = ohlcData.map(item => ({
     ...item,
     // Format date for display
     displayDate: item.date.split(' ')[1],
-    // Pre-calculate values for visualization
-    candleHeight: 20, // Fixed height for visualization simplicity
-    // Values for bar chart representation of candles
-    highLowRange: item.high - item.low,
-    openCloseRange: Math.abs(item.close - item.open),
+    // For candlestick rendering
     isBullish: item.close > item.open
   }));
 
@@ -154,7 +146,7 @@ const OHLCAnalysis: React.FC = () => {
   return (
     <HomeLayout 
       title="OHLC Analysis" 
-      subtitle="5-minute candlestick chart with technical indicators"
+      subtitle="5-minute candlestick chart with price data"
     >
       {/* Chart Card */}
       <Card className="w-full max-w-7xl mb-6 card-hover">
@@ -164,7 +156,7 @@ const OHLCAnalysis: React.FC = () => {
             5-Minute OHLC Chart
           </CardTitle>
           <CardDescription>
-            Candlestick chart with price and technical indicators
+            Candlestick chart displaying price movement
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -179,72 +171,33 @@ const OHLCAnalysis: React.FC = () => {
                 <YAxis 
                   yAxisId="price" 
                   domain={['dataMin', 'dataMax']} 
+                  tickCount={7}
                   allowDecimals={false}
-                  orientation="right"
-                />
-                <YAxis 
-                  yAxisId="indicator" 
-                  domain={[0, 'dataMax']} 
-                  orientation="left"
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
                 
-                {/* Simplified candle representation using standard Bar */}
-                <Bar
-                  name="OHLC Candle"
-                  dataKey="openCloseRange"
-                  fill="transparent"
-                  stroke="#8884d8"
-                  yAxisId="price"
-                  // Use a simpler formatter that doesn't rely on yAxis.scale
-                  shape={(props) => {
-                    const isBullish = props.payload.isBullish;
-                    const fill = isBullish ? '#10b981' : '#ef4444';
-                    return (
-                      <rect
-                        x={props.x}
-                        y={props.y}
-                        width={props.width}
-                        height={props.height}
-                        fill={fill}
-                        stroke={fill}
-                      />
-                    );
-                  }}
-                />
-                
-                <Line
-                  name="ATR"
-                  type="monotone"
-                  dataKey="atr"
-                  stroke="#82ca9d"
-                  dot={false}
-                  yAxisId="indicator"
-                />
-                <Line
-                  name="Volatility"
-                  type="monotone"
-                  dataKey="volatility_b"
-                  stroke="#8884d8"
-                  dot={false}
-                  yAxisId="indicator"
-                />
-                <Line
-                  name="ADX"
-                  type="monotone"
-                  dataKey="trend_adx"
-                  stroke="#ffc658"
-                  dot={false}
-                  yAxisId="indicator"
-                />
+                {/* Render custom candlesticks */}
+                {chartData.map((entry, index) => (
+                  <CandleStickComponent
+                    key={`candle-${index}`}
+                    x={index * (800 / chartData.length) + 50}
+                    width={15}
+                    y={50}
+                    height={300}
+                    open={entry.open}
+                    close={entry.close}
+                    high={entry.high}
+                    low={entry.low}
+                    index={index}
+                  />
+                ))}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
         <CardFooter className="border-t pt-4">
           <p className="text-sm text-muted-foreground">
-            Data updates automatically every 5 minutes. Chart displays OHLC data with ATR, Volatility, and ADX indicators.
+            Data updates automatically every 5 minutes. Chart displays OHLC candles similar to TradingView.
           </p>
         </CardFooter>
       </Card>
