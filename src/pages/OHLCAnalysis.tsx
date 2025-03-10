@@ -76,27 +76,66 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// A simple CandleStick component using rectangles
+const CandleStick = (props: any) => {
+  const { x, y, width, height, payload } = props;
+  const { open, close, high, low } = payload;
+  
+  // Calculate positions based on the values not using props.yAxis.scale
+  // Instead we'll use the y value directly provided by recharts
+  const fill = close > open ? '#10b981' : '#ef4444';
+  const xCenter = x + width / 2;
+  
+  // Use svg elements directly without calculations that rely on yAxis.scale
+  return (
+    <g>
+      {/* Wick */}
+      <line
+        x1={xCenter}
+        x2={xCenter}
+        y1={y}
+        y2={y + height}
+        stroke={fill}
+        strokeWidth={1}
+      />
+      {/* Candle body */}
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={fill}
+        stroke={fill}
+      />
+    </g>
+  );
+};
+
 const OHLCAnalysis: React.FC = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['ohlcData'],
     queryFn: fetchOHLCData,
     refetchInterval: 300000, // Refresh every 5 minutes
-    onError: () => {
-      toast.error("Failed to load OHLC data. Using demo data instead.");
+    meta: {
+      onError: () => {
+        toast.error("Failed to load OHLC data. Using demo data instead.");
+      }
     }
   });
 
   const ohlcData = data || demoData;
 
-  // Format data for the chart
+  // Format data for the chart - simplify to avoid custom calculations
   const chartData = ohlcData.map(item => ({
     ...item,
     // Format date for display
     displayDate: item.date.split(' ')[1],
-    // Calculate candle body height
-    candleBody: Math.abs(item.close - item.open),
-    // Determine if candle is bullish or bearish
-    isBullish: item.close > item.open,
+    // Pre-calculate values for visualization
+    candleHeight: 20, // Fixed height for visualization simplicity
+    // Values for bar chart representation of candles
+    highLowRange: item.high - item.low,
+    openCloseRange: Math.abs(item.close - item.open),
+    isBullish: item.close > item.open
   }));
 
   if (isLoading) {
@@ -150,56 +189,31 @@ const OHLCAnalysis: React.FC = () => {
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
+                
+                {/* Simplified candle representation using standard Bar */}
                 <Bar
                   name="OHLC Candle"
-                  dataKey="candleBody"
+                  dataKey="openCloseRange"
                   fill="transparent"
                   stroke="#8884d8"
                   yAxisId="price"
+                  // Use a simpler formatter that doesn't rely on yAxis.scale
                   shape={(props) => {
-                    const { x, y, width, height, isBullish } = props;
-                    const fill = props.payload.isBullish ? '#10b981' : '#ef4444';
-                    
-                    // Access payload data
-                    const { high, low, open, close } = props.payload;
-                    
-                    // Calculate positions
-                    const xCenter = x + width / 2;
-                    const candleTop = Math.min(
-                      props.yAxis.scale(open),
-                      props.yAxis.scale(close)
-                    );
-                    const candleBottom = Math.max(
-                      props.yAxis.scale(open),
-                      props.yAxis.scale(close)
-                    );
-                    const wickTop = props.yAxis.scale(low);
-                    const wickBottom = props.yAxis.scale(high);
-                    
+                    const isBullish = props.payload.isBullish;
+                    const fill = isBullish ? '#10b981' : '#ef4444';
                     return (
-                      <g>
-                        {/* Candle body */}
-                        <rect
-                          x={x}
-                          y={candleTop}
-                          width={width}
-                          height={Math.max(1, candleBottom - candleTop)}
-                          fill={fill}
-                          stroke={fill}
-                        />
-                        {/* Wick */}
-                        <line
-                          x1={xCenter}
-                          y1={wickBottom}
-                          x2={xCenter}
-                          y2={wickTop}
-                          stroke={fill}
-                          strokeWidth={1}
-                        />
-                      </g>
+                      <rect
+                        x={props.x}
+                        y={props.y}
+                        width={props.width}
+                        height={props.height}
+                        fill={fill}
+                        stroke={fill}
+                      />
                     );
                   }}
                 />
+                
                 <Line
                   name="ATR"
                   type="monotone"
