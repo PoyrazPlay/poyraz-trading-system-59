@@ -1,23 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { 
-  CartesianGrid, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  ResponsiveContainer, 
-  ComposedChart,
-  Bar,
-  Line,
-  Legend,
-  ReferenceLine
-} from 'recharts';
 import { CandlestickChart, Clock, BarChart3 } from 'lucide-react';
-import { toast } from 'sonner';
+import TradingViewWidget from '@/components/charts/TradingViewWidget';
 
 // Define OHLC data type
 interface OHLCData {
@@ -52,25 +37,6 @@ const fetchOHLCData = async (): Promise<OHLCData[]> => {
     throw new Error('Failed to fetch OHLC data');
   }
   return response.json();
-};
-
-// Custom tooltip for chart
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <Card className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700">
-        <div className="font-medium">{data.date}</div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-1 text-sm">
-          <div>Open: <span className="font-medium">{data.open.toFixed(2)}</span></div>
-          <div>High: <span className="font-medium">{data.high.toFixed(2)}</span></div>
-          <div>Low: <span className="font-medium">{data.low.toFixed(2)}</span></div>
-          <div>Close: <span className="font-medium">{data.close.toFixed(2)}</span></div>
-        </div>
-      </Card>
-    );
-  }
-  return null;
 };
 
 // Custom component for rendering candlesticks
@@ -182,59 +148,25 @@ const OHLCAnalysis: React.FC = () => {
   return (
     <HomeLayout 
       title="OHLC Analysis" 
-      subtitle="5-minute candlestick chart with price data"
+      subtitle="Real-time market data powered by TradingView"
     >
       {/* Chart Card */}
       <Card className="w-full max-w-7xl mb-6 card-hover">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <CandlestickChart className="h-5 w-5" />
-            5-Minute OHLC Chart
+            NIFTY Price Chart
           </CardTitle>
           <CardDescription>
-            Candlestick chart displaying price movement
+            Interactive TradingView chart with advanced analysis tools
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis 
-                  dataKey="displayDate" 
-                  scale="band" 
-                  padding={{ left: 10, right: 10 }} 
-                />
-                <YAxis 
-                  domain={[yMin, yMax]} 
-                  tickCount={7} 
-                  allowDecimals={true} 
-                  tickFormatter={(value) => value.toFixed(1)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                
-                {chartData.map((entry, index) => (
-                  <g key={`candle-${index}`}>
-                    {renderCandlestick({
-                      x: 50 + index * 30, // Base position + index * width
-                      y: 50, // Base Y position
-                      width: 20, // Candle width
-                      height: 300, // Chart height
-                      index,
-                      payload: entry
-                    })}
-                  </g>
-                ))}
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
+          <TradingViewWidget />
         </CardContent>
         <CardFooter className="border-t pt-4">
           <p className="text-sm text-muted-foreground">
-            Data updates automatically every 5 minutes. Chart displays OHLC candles similar to TradingView.
+            Powered by TradingView. Data updates in real-time.
           </p>
         </CardFooter>
       </Card>
