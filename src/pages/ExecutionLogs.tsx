@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileText, AlertTriangle, CheckCircle, Clock, Search, Filter } from 'lucide-react';
+import { FileText, AlertTriangle, CheckCircle, Clock, Search, Filter, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Define log entry type
@@ -37,74 +36,151 @@ const demoLogs: LogEntry[] = [
   { timestamp: "2025-02-28 15:10:30", level: "info", message: "Stop loss triggered", tradeId: "ORD345678", symbol: "NIFTY25MARFUT", details: "Bought 25 @ 22530.25, P&L: -537.50" }
 ];
 
-// Function to fetch log data
-const fetchLogs = async (): Promise<LogEntry[]> => {
-  const response = await fetch('http://localhost:5000/execution_logs');
-  if (!response.ok) {
-    throw new Error('Failed to fetch execution logs');
+// Interface for date API response
+interface DatesResponse {
+  exec_dates: string[];
+}
+
+// Interface for log content API response
+interface LogContentResponse {
+  date: string;
+  log_content: string;
+}
+
+// Function to fetch available execution dates
+const fetchAvailableDates = async (): Promise<string[]> => {
+  try {
+    const response = await fetch('http://54.221.81.212:5000/get_exec_dates');
+    if (!response.ok) {
+      throw new Error('Failed to fetch execution dates');
+    }
+    const data: DatesResponse = await response.json();
+    return data.exec_dates;
+  } catch (error) {
+    console.error("Error fetching dates:", error);
+    throw error;
   }
-  return response.json();
+};
+
+// Function to fetch log content for a specific date
+const fetchLogContent = async (date: string): Promise<string> => {
+  try {
+    const response = await fetch(`http://54.221.81.212:5000/get_exec_log?date=${date}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch execution log content');
+    }
+    const data: LogContentResponse = await response.json();
+    return data.log_content;
+  } catch (error) {
+    console.error(`Error fetching log content for date ${date}:`, error);
+    throw error;
+  }
+};
+
+// Function to format date from YYYYMMDD to YYYY-MM-DD format
+const formatDateDisplay = (dateString: string): string => {
+  if (dateString.length !== 8) return dateString;
+  
+  const year = dateString.substring(0, 4);
+  const month = dateString.substring(4, 6);
+  const day = dateString.substring(6, 8);
+  
+  return `${year}-${month}-${day}`;
 };
 
 const ExecutionLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [rawLogContent, setRawLogContent] = useState<string>('');
 
-  // Fetch log data
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['executionLogs'],
-    queryFn: fetchLogs,
-    refetchInterval: 60000, // Refresh every minute
+  // Fetch available dates
+  const { 
+    data: availableDates, 
+    isLoading: isLoadingDates, 
+    error: datesError 
+  } = useQuery({
+    queryKey: ['executionDates'],
+    queryFn: fetchAvailableDates,
     meta: {
       onSettled: (_, error) => {
         if (error) {
-          toast.error("Failed to load execution logs. Using demo data instead.");
+          toast.error("Failed to load execution dates");
         }
       }
     }
   });
 
-  const logs = data || demoLogs;
-
-  // Filter logs based on search term and level filter
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = 
-      log.message.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (log.details && log.details.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (log.tradeId && log.tradeId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (log.symbol && log.symbol.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesLevel = levelFilter === 'all' || log.level === levelFilter;
-    
-    return matchesSearch && matchesLevel;
+  // Fetch log content for selected date
+  const { 
+    data: logContent,
+    isLoading: isLoadingContent,
+    error: contentError,
+    refetch: refetchLogContent
+  } = useQuery({
+    queryKey: ['executionLogContent', selectedDate],
+    queryFn: () => fetchLogContent(selectedDate),
+    enabled: !!selectedDate, // Only run query if selectedDate is set
+    meta: {
+      onSettled: (_, error) => {
+        if (error) {
+          toast.error(`Failed to load log content for date ${selectedDate}`);
+        }
+      }
+    }
   });
 
-  // Get level badge color
-  const getLevelBadge = (level: string) => {
-    switch (level) {
-      case 'error':
-        return <Badge variant="destructive">{level}</Badge>;
-      case 'warning':
-        // Changed from 'warning' to 'secondary' with custom yellow styling
-        return <Badge variant="secondary" className="bg-yellow-500 hover:bg-yellow-600">{level}</Badge>;
-      case 'info':
-        return <Badge variant="default">{level}</Badge>;
-      case 'debug':
-        return <Badge variant="outline" className="text-muted-foreground">{level}</Badge>;
-      default:
-        return <Badge variant="outline">{level}</Badge>;
+  // Set the first available date as selected when dates are loaded
+  useEffect(() => {
+    if (availableDates && availableDates.length > 0 && !selectedDate) {
+      setSelectedDate(availableDates[0]);
     }
+  }, [availableDates, selectedDate]);
+
+  // Update rawLogContent when logContent changes
+  useEffect(() => {
+    if (logContent) {
+      setRawLogContent(logContent);
+    }
+  }, [logContent]);
+
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
   };
 
-  if (isLoading) {
+  if (isLoadingDates) {
     return (
-      <HomeLayout title="Execution Logs" subtitle="Loading log data...">
+      <HomeLayout title="Execution Logs" subtitle="Loading date data...">
         <div className="flex items-center justify-center h-64 w-full">
           <div className="animate-pulse flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-t-4 border-primary rounded-full animate-spin"></div>
-            <p className="text-muted-foreground">Loading execution logs...</p>
+            <p className="text-muted-foreground">Loading execution dates...</p>
           </div>
         </div>
+      </HomeLayout>
+    );
+  }
+
+  if (datesError) {
+    return (
+      <HomeLayout title="Execution Logs" subtitle="Error loading data">
+        <Card className="w-full max-w-7xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="font-medium text-lg mb-2">Failed to load execution dates</h3>
+              <p className="text-muted-foreground mb-4">
+                There was an error loading the available execution dates.
+              </p>
+              <button 
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            </div>
+          </CardContent>
+        </Card>
       </HomeLayout>
     );
   }
@@ -128,32 +204,22 @@ const ExecutionLogs: React.FC = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative max-w-xs">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search logs..."
-                  className="pl-8 w-[200px] md:w-[250px]"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 <Select
-                  value={levelFilter}
-                  onValueChange={setLevelFilter}
+                  value={selectedDate}
+                  onValueChange={handleDateChange}
+                  disabled={isLoadingDates || !availableDates}
                 >
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Filter by level" />
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select date" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="info">Info</SelectItem>
-                    <SelectItem value="warning">Warning</SelectItem>
-                    <SelectItem value="error">Error</SelectItem>
-                    <SelectItem value="debug">Debug</SelectItem>
+                    {availableDates && availableDates.map((date) => (
+                      <SelectItem key={date} value={date}>
+                        {formatDateDisplay(date)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -162,62 +228,49 @@ const ExecutionLogs: React.FC = () => {
         </CardHeader>
         
         <CardContent>
-          <ScrollArea className="h-[500px] rounded-md border">
-            <div className="p-4 space-y-4">
-              {filteredLogs.length > 0 ? (
-                filteredLogs.map((log, index) => (
-                  <div key={index} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        {log.level === 'error' && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                        {log.level === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-500" />}
-                        {log.level === 'info' && <CheckCircle className="h-4 w-4 text-primary" />}
-                        {log.level === 'debug' && <FileText className="h-4 w-4 text-muted-foreground" />}
-                        <span className="font-medium">{log.message}</span>
-                        {getLevelBadge(log.level)}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{log.timestamp}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-2 ml-6 text-sm">
-                      {log.tradeId && (
-                        <div>
-                          <span className="font-medium">Trade ID:</span> {log.tradeId}
-                        </div>
-                      )}
-                      {log.symbol && (
-                        <div>
-                          <span className="font-medium">Symbol:</span> {log.symbol}
-                        </div>
-                      )}
-                      {log.details && (
-                        <div>
-                          <span className="font-medium">Details:</span> {log.details}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <FileText className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="font-medium text-lg mb-1">No logs found</h3>
-                  <p className="text-muted-foreground">
-                    No logs match your current search and filter criteria.
-                  </p>
-                </div>
-              )}
-            </div>
+          <ScrollArea className="h-[600px] rounded-md border">
+            {isLoadingContent && selectedDate ? (
+              <div className="flex flex-col items-center justify-center h-full py-10">
+                <div className="w-10 h-10 border-t-4 border-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-muted-foreground">Loading log content...</p>
+              </div>
+            ) : contentError ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center p-4">
+                <AlertTriangle className="h-10 w-10 text-destructive mb-3" />
+                <h3 className="font-medium text-lg mb-1">Error loading log content</h3>
+                <p className="text-muted-foreground mb-4">
+                  Failed to load log content for date {formatDateDisplay(selectedDate)}
+                </p>
+                <button 
+                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm"
+                  onClick={() => refetchLogContent()}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : !selectedDate ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center p-4">
+                <Calendar className="h-10 w-10 text-muted-foreground mb-3" />
+                <h3 className="font-medium text-lg mb-1">No date selected</h3>
+                <p className="text-muted-foreground">
+                  Please select a date to view execution logs.
+                </p>
+              </div>
+            ) : (
+              <pre className="p-4 font-mono text-sm whitespace-pre-wrap break-words">
+                {rawLogContent || "No log content available for the selected date."}
+              </pre>
+            )}
           </ScrollArea>
         </CardContent>
         
         <CardFooter className="border-t pt-4">
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Last update: {new Date().toLocaleTimeString()} • Showing {filteredLogs.length} of {logs.length} logs
+            {selectedDate ? 
+              <>Selected date: {formatDateDisplay(selectedDate)} • Last update: {new Date().toLocaleTimeString()}</> :
+              <>No date selected • Last update: {new Date().toLocaleTimeString()}</>
+            }
           </p>
         </CardFooter>
       </Card>
