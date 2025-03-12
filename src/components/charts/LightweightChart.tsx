@@ -43,7 +43,8 @@ const LightweightChart = ({ data }: LightweightChartProps) => {
 
     // Convert number timestamps to proper format for lightweight-charts
     const formattedData = data.map(item => ({
-      time: item.time as Time, // Cast to Time type
+      // Convert timestamp to string in format 'YYYY-MM-DD'
+      time: new Date(item.time * 1000).toISOString().split('T')[0] as Time,
       open: item.open,
       high: item.high,
       low: item.low,
