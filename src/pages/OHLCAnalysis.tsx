@@ -3,6 +3,8 @@ import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CandlestickChart, Clock, BarChart3 } from 'lucide-react';
 import TradingViewWidget from '@/components/charts/TradingViewWidget';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
 
 // Define OHLC data type
 interface OHLCData {
@@ -85,7 +87,11 @@ const OHLCAnalysis: React.FC = () => {
     refetchInterval: 300000, // Refresh every 5 minutes
     meta: {
       onError: () => {
-        toast.error("Failed to load OHLC data. Using demo data instead.");
+        toast({
+          title: "Error",
+          description: "Failed to load OHLC data. Using demo data instead.",
+          variant: "destructive",
+        });
       }
     }
   });
