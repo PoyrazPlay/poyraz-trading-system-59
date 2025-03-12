@@ -1,9 +1,9 @@
 
 import { useEffect, useRef } from 'react';
-import { createChart, ColorType, UTCTimestamp } from 'lightweight-charts';
+import { createChart, ColorType } from 'lightweight-charts';
 
 interface ChartData {
-  time: UTCTimestamp;
+  time: number;
   open: number;
   high: number;
   low: number;
@@ -41,7 +41,13 @@ const LightweightChart = ({ data }: LightweightChartProps) => {
       wickDownColor: '#ef5350',
     });
 
-    candlestickSeries.setData(data);
+    // Convert number timestamps to proper format expected by lightweight-charts
+    const formattedData = data.map(item => ({
+      ...item,
+      time: item.time as unknown as number, // Cast to satisfy lightweight-charts
+    }));
+
+    candlestickSeries.setData(formattedData);
     chart.timeScale().fitContent();
 
     const handleResize = () => {

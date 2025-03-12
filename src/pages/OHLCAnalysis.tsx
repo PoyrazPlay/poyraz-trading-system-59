@@ -2,13 +2,13 @@
 import React from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CandlestickChart, Clock, BarChart3 } from 'lucide-react';
+import { CandlestickChart, Clock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import LightweightChart from '@/components/charts/LightweightChart';
 import yahooFinance from 'yahoo-finance2';
 
-// Chart data interface
+// Chart data interface - matching the one in LightweightChart.tsx
 interface ChartData {
   time: number;
   open: number;
@@ -26,7 +26,7 @@ const fetchYahooData = async (): Promise<ChartData[]> => {
     });
 
     return result.map(bar => ({
-      time: (new Date(bar.date).getTime() / 1000) as number,
+      time: Math.floor(new Date(bar.date).getTime() / 1000), // Convert to seconds
       open: Number(bar.open),
       high: Number(bar.high),
       low: Number(bar.low),
