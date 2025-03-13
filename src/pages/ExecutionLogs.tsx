@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
@@ -10,18 +9,15 @@ import { FileText, AlertTriangle, CheckCircle, Clock, Calendar } from 'lucide-re
 import { toast } from 'sonner';
 import { fallbackDates, getFallbackLogContent } from '@/utils/execLogsData';
 
-// Interface for date API response
 interface DatesResponse {
   exec_dates: string[];
 }
 
-// Interface for log content API response
 interface LogContentResponse {
   date: string;
   log_content: string;
 }
 
-// Function to fetch available execution dates
 const fetchAvailableDates = async (): Promise<string[]> => {
   try {
     const response = await fetch('http://54.221.81.212:5000/get_exec_dates');
@@ -36,7 +32,6 @@ const fetchAvailableDates = async (): Promise<string[]> => {
   }
 };
 
-// Function to fetch log content for a specific date
 const fetchLogContent = async (date: string): Promise<string> => {
   try {
     const response = await fetch(`http://54.221.81.212:5000/get_exec_log?date=${date}`);
@@ -51,7 +46,6 @@ const fetchLogContent = async (date: string): Promise<string> => {
   }
 };
 
-// Function to format date from YYYYMMDD to YYYY-MM-DD format
 const formatDateDisplay = (dateString: string): string => {
   if (dateString.length !== 8) return dateString;
   
@@ -67,7 +61,6 @@ const ExecutionLogs: React.FC = () => {
   const [rawLogContent, setRawLogContent] = useState<string>('');
   const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
 
-  // Fetch available dates
   const { 
     data: availableDates, 
     isLoading: isLoadingDates, 
@@ -91,7 +84,6 @@ const ExecutionLogs: React.FC = () => {
     }
   });
 
-  // Fetch log content for selected date
   const { 
     data: logContent,
     isLoading: isLoadingContent,
@@ -100,7 +92,7 @@ const ExecutionLogs: React.FC = () => {
   } = useQuery({
     queryKey: ['executionLogContent', selectedDate],
     queryFn: () => fetchLogContent(selectedDate),
-    enabled: !!selectedDate && !usingFallbackData, // Only run query if selectedDate is set and not using fallback
+    enabled: !!selectedDate && !usingFallbackData,
     meta: {
       onSettled: (_, error) => {
         if (error && selectedDate) {
@@ -117,29 +109,37 @@ const ExecutionLogs: React.FC = () => {
     }
   });
 
-  // Set the first available date as selected when dates are loaded
   useEffect(() => {
     const dates = usingFallbackData ? fallbackDates : availableDates;
-    if (dates && dates.length > 0 && !selectedDate) {
-      setSelectedDate(dates[0]);
+    if (dates && dates.length > 0) {
+      const sortedDates = [...dates].sort((a, b) => {
+        const dateA = a.length === 8 ? 
+          new Date(`${a.substring(0, 4)}-${a.substring(4, 6)}-${a.substring(6, 8)}`) :
+          new Date(a);
+        const dateB = b.length === 8 ? 
+          new Date(`${b.substring(0, 4)}-${b.substring(4, 6)}-${b.substring(6, 8)}`) :
+          new Date(b);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      if (!selectedDate) {
+        setSelectedDate(sortedDates[0]);
+      }
     }
   }, [availableDates, selectedDate, usingFallbackData]);
 
-  // Load fallback dates if API failed
   useEffect(() => {
     if (datesError) {
       setUsingFallbackData(true);
     }
   }, [datesError]);
 
-  // Update rawLogContent when logContent changes
   useEffect(() => {
     if (logContent) {
       setRawLogContent(logContent);
     }
   }, [logContent]);
 
-  // Update rawLogContent for fallback data when selectedDate changes
   useEffect(() => {
     if (usingFallbackData && selectedDate) {
       setRawLogContent(getFallbackLogContent(selectedDate));
@@ -150,8 +150,16 @@ const ExecutionLogs: React.FC = () => {
     setSelectedDate(date);
   };
 
-  // Get the effective dates to display (either from API or fallback)
-  const effectiveDates = usingFallbackData ? fallbackDates : availableDates;
+  const effectiveDates = usingFallbackData ? [...fallbackDates] : [...(availableDates || [])];
+  effectiveDates.sort((a, b) => {
+    const dateA = a.length === 8 ? 
+      new Date(`${a.substring(0, 4)}-${a.substring(4, 6)}-${a.substring(6, 8)}`) :
+      new Date(a);
+    const dateB = b.length === 8 ? 
+      new Date(`${b.substring(0, 4)}-${b.substring(4, 6)}-${b.substring(6, 8)}`) :
+      new Date(b);
+    return dateB.getTime() - dateA.getTime();
+  });
 
   const handleRetry = () => {
     setUsingFallbackData(false);

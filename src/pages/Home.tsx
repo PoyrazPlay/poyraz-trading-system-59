@@ -34,6 +34,12 @@ const Home = () => {
 
   const analysisOptions = [
     { 
+      title: "OHLC Analysis", 
+      path: "/ohlc-analysis", 
+      icon: <CandlestickChart />,
+      description: "Candlestick charts and technical indicators"
+    },
+    { 
       title: "Option Chain", 
       path: "/oi-detailed", 
       icon: <LineChart />,
@@ -50,12 +56,6 @@ const Home = () => {
       path: "/pcr", 
       icon: <PieChart />,
       description: "Put/Call ratio visualization"
-    },
-    { 
-      title: "OHLC Analysis", 
-      path: "/ohlc-analysis", 
-      icon: <CandlestickChart />,
-      description: "Candlestick charts and technical indicators"
     }
   ];
 

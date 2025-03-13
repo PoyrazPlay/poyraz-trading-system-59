@@ -138,6 +138,9 @@ const PCR = () => {
   };
 
   const uniqueDates = data ? [...new Set(Object.keys(data).map((timestamp) => timestamp.split(" ")[0]))] : [];
+  // Sort dates in descending order (newest first)
+  uniqueDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  
   const filteredData = data && selectedDate 
     ? Object.entries(data).filter(([timestamp]) => timestamp.startsWith(selectedDate)) 
     : Object.entries(data || {});
