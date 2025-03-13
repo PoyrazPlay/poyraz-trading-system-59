@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +26,7 @@ const Login = () => {
     
     try {
       // Try to call the API
-      const response = await fetch('http://localhost:5000/authenticate', {
+      const response = await fetch('http://54.221.81.212:5000/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

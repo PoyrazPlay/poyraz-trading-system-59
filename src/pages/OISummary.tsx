@@ -163,7 +163,7 @@ const OISummary = () => {
       setError(null);
       
       try {
-        const response = await axios.get('http://localhost:5000/option_chain_symbols_expiries');
+        const response = await axios.get('http://54.221.81.212:5000/option_chain_symbols_expiries');
         console.log("Fetched Symbols and Expiries:", response.data);
         
         if (response.data && typeof response.data === 'object') {
@@ -228,7 +228,7 @@ const OISummary = () => {
       setError(null);
   
       try {
-        const response = await axios.get('http://localhost:5000/available_dates_times', {
+        const response = await axios.get('http://54.221.81.212:5000/available_dates_times', {
           params: { symbol: selectedSymbol, expiry: selectedExpiry }
         });
         console.log("Fetched Available Dates:", response.data);
@@ -273,7 +273,7 @@ const OISummary = () => {
       setError(null);
   
       try {
-        const response = await axios.get('http://localhost:5000/option_chain_summary', {
+        const response = await axios.get('http://54.221.81.212:5000/option_chain_summary', {
           params: { symbol: selectedSymbol, expiry: selectedExpiry, selected_date: selectedDate }
         });
         console.log("Fetched Data:", response.data);

@@ -31,7 +31,7 @@ const TodaysTrade = () => {
   const fetchTradesData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/todays_trades');
+      const response = await fetch('http://54.221.81.212:5000/todays_trades');
       const data = await response.json();
       
       // Transform the data to match the expected format

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import HomeLayout from '@/components/layout/HomeLayout';
 import axios from 'axios';
@@ -72,7 +73,7 @@ const OIDetailed = () => {
         
         try {
           // Try to fetch from API
-          const response = await axios.get('/option_chain_symbols_expiries');
+          const response = await axios.get('http://54.221.81.212:5000/option_chain_symbols_expiries');
           console.log("API Response:", response.data);
           
           if (response.data && typeof response.data === 'object') {
@@ -138,7 +139,7 @@ const OIDetailed = () => {
       
       const fetchExpiries = async () => {
         try {
-          const response = await axios.get('/option_chain_symbols_expiries');
+          const response = await axios.get('http://54.221.81.212:5000/option_chain_symbols_expiries');
           console.log("Fetch expiries for symbol:", selectedSymbol, response.data);
           
           if (response.data && response.data[selectedSymbol]) {
@@ -183,7 +184,7 @@ const OIDetailed = () => {
       
       const fetchDates = async () => {
         try {
-          const response = await axios.get(`/available_dates_times?symbol=${selectedSymbol}&expiry=${selectedExpiry}`);
+          const response = await axios.get(`http://54.221.81.212:5000/available_dates_times?symbol=${selectedSymbol}&expiry=${selectedExpiry}`);
           console.log("Fetch dates response:", response.data);
           
           if (response.data && response.data.dates && Array.isArray(response.data.dates)) {
@@ -226,7 +227,7 @@ const OIDetailed = () => {
       
       const fetchTimes = async () => {
         try {
-          const response = await axios.get(`/available_times?symbol=${selectedSymbol}&expiry=${selectedExpiry}&date=${selectedDate}`);
+          const response = await axios.get(`http://54.221.81.212:5000/available_times?symbol=${selectedSymbol}&expiry=${selectedExpiry}&date=${selectedDate}`);
           console.log("Fetch times response:", response.data);
           
           if (response.data && response.data.times && Array.isArray(response.data.times)) {
@@ -270,7 +271,7 @@ const OIDetailed = () => {
       
       const fetchOptionChainData = async () => {
         try {
-          const response = await axios.get('/option_chain_data', {
+          const response = await axios.get('http://54.221.81.212:5000/option_chain_data', {
             params: { symbol: selectedSymbol, expiry: selectedExpiry, date: selectedDate, time: selectedTime }
           });
           console.log("Fetching option chain data", response.data);

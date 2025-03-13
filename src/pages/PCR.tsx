@@ -21,7 +21,7 @@ const PCR = () => {
   const fetchSymbolsAndExpiries = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/symbols_expiries");
+      const response = await fetch("http://54.221.81.212:5000/symbols_expiries");
       const symbolsExpiries = await response.json();
       
       if (Object.keys(symbolsExpiries).length > 0) {
@@ -61,7 +61,7 @@ const PCR = () => {
   const fetchPCRData = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/pcr_data', {
+      const response = await axios.get('http://54.221.81.212:5000/pcr_data', {
         params: { symbol, expiry }
       });
       setData(response.data);
@@ -117,7 +117,7 @@ const PCR = () => {
     setSymbol(newSymbol);
     
     try {
-      fetch(`http://localhost:5000/symbols_expiries`)
+      fetch(`http://54.221.81.212:5000/symbols_expiries`)
         .then((response) => response.json())
         .then((symbolsExpiries) => {
           setExpiries(symbolsExpiries[newSymbol]);
