@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CandlestickChart, Clock, BarChart3, RefreshCw } from 'lucide-react';
-import TradingViewWidget from '@/components/charts/TradingViewWidget';
+import { BarChart3, Clock, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -130,29 +129,8 @@ const OHLCAnalysis: React.FC = () => {
   return (
     <HomeLayout 
       title="OHLC Analysis" 
-      subtitle="Real-time market data powered by TradingView"
+      subtitle="Real-time market data"
     >
-      {/* Chart Card */}
-      <Card className="w-full max-w-7xl mb-6 card-hover">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <CandlestickChart className="h-5 w-5" />
-            NIFTY Price Chart
-          </CardTitle>
-          <CardDescription>
-            Interactive TradingView chart with advanced analysis tools
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TradingViewWidget />
-        </CardContent>
-        <CardFooter className="border-t pt-4">
-          <p className="text-sm text-muted-foreground">
-            Powered by TradingView. Data updates in real-time.
-          </p>
-        </CardFooter>
-      </Card>
-
       {/* OHLC Data Table with Interval Selector */}
       <Card className="w-full max-w-7xl card-hover">
         <CardHeader className="flex flex-row items-center justify-between">
