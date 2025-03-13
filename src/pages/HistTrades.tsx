@@ -214,6 +214,8 @@ const HistTrades = () => {
                       <td className="py-3 px-2">{trade.Symbol}</td>
                       <td className="py-3 px-2">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          trade.Type === 'CE' ? 'bg-green-100 text-green-800' : 
+                          trade.Type === 'PE' ? 'bg-red-100 text-red-800' :
                           trade.Type === 'BUY' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {trade.Type}

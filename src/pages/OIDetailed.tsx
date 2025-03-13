@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import HomeLayout from '@/components/layout/HomeLayout';
 import axios from 'axios';
@@ -355,27 +354,26 @@ const OIDetailed = () => {
       }
     } else if (value === "multiplesOf500") {
       const multiplesOf500 = Object.keys(groupedData).filter((strike) => parseInt(strike) % 500 === 0);
-      if (multiplesOf500.every((strike) => newSelectedStrikes.includes(strike))) {
-        newSelectedStrikes = newSelectedStrikes.filter((strike) => !multiplesOf500.includes(strike)); // Deselect multiples of 500
+      if (multiplesOf500.length > 0 && multiplesOf500.every((strike) => newSelectedStrikes.includes(strike))) {
+        newSelectedStrikes = newSelectedStrikes.filter((strike) => !multiplesOf500.includes(strike));
       } else {
-        newSelectedStrikes = [...new Set([...newSelectedStrikes, ...multiplesOf500])]; // Select multiples of 500
+        newSelectedStrikes = [...new Set([...newSelectedStrikes, ...multiplesOf500])];
       }
     } else if (value === "multiplesOf100") {
       const multiplesOf100 = Object.keys(groupedData).filter((strike) => parseInt(strike) % 100 === 0);
       if (multiplesOf100.every((strike) => newSelectedStrikes.includes(strike))) {
-        newSelectedStrikes = newSelectedStrikes.filter((strike) => !multiplesOf100.includes(strike)); // Deselect multiples of 100
+        newSelectedStrikes = newSelectedStrikes.filter((strike) => !multiplesOf100.includes(strike));
       } else {
-        newSelectedStrikes = [...new Set([...newSelectedStrikes, ...multiplesOf100])]; // Select multiples of 100
+        newSelectedStrikes = [...new Set([...newSelectedStrikes, ...multiplesOf100])];
       }
     } else if (value === "multiplesOf200") {
       const multiplesOf200 = Object.keys(groupedData).filter((strike) => parseInt(strike) % 200 === 0);
       if (multiplesOf200.every((strike) => newSelectedStrikes.includes(strike))) {
-        newSelectedStrikes = newSelectedStrikes.filter((strike) => !multiplesOf200.includes(strike)); // Deselect multiples of 200
+        newSelectedStrikes = newSelectedStrikes.filter((strike) => !multiplesOf200.includes(strike));
       } else {
-        newSelectedStrikes = [...new Set([...newSelectedStrikes, ...multiplesOf200])]; // Select multiples of 200
+        newSelectedStrikes = [...new Set([...newSelectedStrikes, ...multiplesOf200])];
       }
     } else {
-      // Toggle individual strike selection (Add if not present, remove if present)
       newSelectedStrikes = newSelectedStrikes.includes(value)
         ? newSelectedStrikes.filter((strike) => strike !== value)
         : [...newSelectedStrikes, value];
