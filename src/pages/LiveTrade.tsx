@@ -62,7 +62,7 @@ const LiveTrade = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/live_trade');
+        const response = await fetch('http://54.221.81.212:5000:5000/live_trade');
         
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);

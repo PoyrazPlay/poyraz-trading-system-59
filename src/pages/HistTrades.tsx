@@ -36,7 +36,7 @@ const HistTrades = () => {
   const fetchAvailableDates = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/available_hist_trade_dates');
+      const response = await fetch('http://54.221.81.212:5000:5000/available_hist_trade_dates');
       const data = await response.json();
       
       if (data && Array.isArray(data.dates)) {
@@ -75,7 +75,7 @@ const HistTrades = () => {
   const fetchTradeData = async (date: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/hist_trade_data?date=${date}`);
+      const response = await fetch(`http://54.221.81.212:5000:5000/hist_trade_data?date=${date}`);
       const data = await response.json();
       setTradeData(data);
       toast({
