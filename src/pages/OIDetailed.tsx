@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import HomeLayout from '@/components/layout/HomeLayout';
 import axios from 'axios';
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 class OptionData {
   constructor(details: any) {
@@ -57,12 +57,12 @@ const OIDetailed = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSymbolsAndExpiries = async () => {
       setLoading(true);
       try {
-        // Mock data for development until API is available
         const mockResponse = {
           data: {
             'NIFTY': ['25-JUL-2024', '29-AUG-2024', '26-SEP-2024'],
@@ -72,7 +72,6 @@ const OIDetailed = () => {
         };
         
         try {
-          // Try to fetch from API
           const response = await axios.get('http://54.221.81.212:5000/option_chain_symbols_expiries');
           console.log("API Response:", response.data);
           
@@ -80,16 +79,13 @@ const OIDetailed = () => {
             setSymbols(Object.keys(response.data));
             
             if (selectedSymbol && response.data[selectedSymbol]) {
-              // Ensure expiries is always an array
               const expiriesData = Array.isArray(response.data[selectedSymbol]) 
                 ? response.data[selectedSymbol] 
                 : [];
               setExpiries(expiriesData);
             } else if (Object.keys(response.data).length > 0) {
-              // Set default selected symbol
               const firstSymbol = Object.keys(response.data)[0];
               setSelectedSymbol(firstSymbol);
-              // Ensure expiries is always an array
               const expiriesData = Array.isArray(response.data[firstSymbol]) 
                 ? response.data[firstSymbol] 
                 : [];
@@ -100,7 +96,6 @@ const OIDetailed = () => {
           }
         } catch (apiError) {
           console.error("Using mock data due to API error:", apiError);
-          // Use mock data
           setSymbols(Object.keys(mockResponse.data));
           
           if (selectedSymbol && mockResponse.data[selectedSymbol]) {
@@ -143,7 +138,6 @@ const OIDetailed = () => {
           console.log("Fetch expiries for symbol:", selectedSymbol, response.data);
           
           if (response.data && response.data[selectedSymbol]) {
-            // Ensure expiries is always an array
             const expiriesData = Array.isArray(response.data[selectedSymbol]) 
                 ? response.data[selectedSymbol] 
                 : [];
@@ -153,7 +147,6 @@ const OIDetailed = () => {
               setSelectedExpiry(expiriesData[0]);
             }
           } else {
-            // Use mock data
             setExpiries(['25-JUL-2024', '29-AUG-2024', '26-SEP-2024']);
             setSelectedExpiry('25-JUL-2024');
             
@@ -165,7 +158,6 @@ const OIDetailed = () => {
           }
         } catch (error) {
           console.error("Error fetching expiries:", error);
-          // Mock data fallback
           const mockExpiries = ['25-JUL-2024', '29-AUG-2024', '26-SEP-2024'];
           setExpiries(mockExpiries);
           setSelectedExpiry(mockExpiries[0]);
@@ -195,7 +187,6 @@ const OIDetailed = () => {
               setSelectedDate('');
             }
           } else {
-            // Mock dates
             const mockDates = ['2024-07-19', '2024-07-18', '2024-07-17'];
             setDates(mockDates);
             setSelectedDate(mockDates[0]);
@@ -208,7 +199,6 @@ const OIDetailed = () => {
           }
         } catch (error) {
           console.error('Error fetching dates:', error);
-          // Mock dates
           const mockDates = ['2024-07-19', '2024-07-18', '2024-07-17'];
           setDates(mockDates);
           setSelectedDate(mockDates[0]);
@@ -238,7 +228,6 @@ const OIDetailed = () => {
               setSelectedTime('');
             }
           } else {
-            // Mock times
             const mockTimes = ['09:30:00', '10:30:00', '11:30:00', '12:30:00', '13:30:00', '14:30:00', '15:15:00'];
             setTimes(mockTimes);
             setSelectedTime(mockTimes[0]);
@@ -251,7 +240,6 @@ const OIDetailed = () => {
           }
         } catch (error) {
           console.error('Error fetching times:', error);
-          // Mock times
           const mockTimes = ['09:30:00', '10:30:00', '11:30:00', '12:30:00', '13:30:00', '14:30:00', '15:15:00'];
           setTimes(mockTimes);
           setSelectedTime(mockTimes[0]);
@@ -297,7 +285,6 @@ const OIDetailed = () => {
           console.error("Error fetching option chain data:", error);
           setError("Failed to load option chain data");
           
-          // Create mock data with both CE and PE options for demo
           const mockData = generateMockData(selectedSymbol, selectedDate, selectedTime);
           setData([mockData]);
           
@@ -345,13 +332,13 @@ const OIDetailed = () => {
 
   const handleStrikeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
-    let newSelectedStrikes = [...selectedStrikes]; // Preserve previous selections
+    let newSelectedStrikes = [...selectedStrikes];
     
     if (value === "all") {
       if (newSelectedStrikes.length === Object.keys(groupedData).length) {
-        newSelectedStrikes = []; // Deselect all if all are already selected
+        newSelectedStrikes = [];
       } else {
-        newSelectedStrikes = Object.keys(groupedData); // Select all
+        newSelectedStrikes = Object.keys(groupedData);
       }
     } else if (value === "multiplesOf500") {
       const multiplesOf500 = Object.keys(groupedData).filter((strike) => parseInt(strike) % 500 === 0);
@@ -381,6 +368,12 @@ const OIDetailed = () => {
     }
   
     setSelectedStrikes(newSelectedStrikes);
+  };
+
+  const handleStrikeClick = (strikePrice: string) => {
+    if (selectedSymbol && selectedExpiry) {
+      navigate(`/strike-detail/${selectedSymbol}/${selectedExpiry}/${strikePrice}`);
+    }
   };
 
   const generateMockData = (symbol: string, date: string, time: string): DataEntry => {
@@ -649,7 +642,10 @@ const OIDetailed = () => {
                           <td className={`px-2 py-1 border text-xs text-center ${ce?.option_position === "ITM" ? "bg-green-50" : ""}`}>
                             {ce?.ltp?.toLocaleString()}
                           </td>
-                          <td className="px-2 py-1 border text-xs text-center font-semibold bg-primary/20">
+                          <td className="px-2 py-1 border text-xs text-center font-semibold bg-primary/20 cursor-pointer hover:bg-primary/40 transition-colors"
+                            onClick={() => handleStrikeClick(strikePrice)}
+                            title="Click for detailed view"
+                          >
                             {strikePrice}
                           </td>
                           <td className={`px-2 py-1 border text-xs text-center ${pe?.option_position === "ITM" ? "bg-green-50" : ""}`}>

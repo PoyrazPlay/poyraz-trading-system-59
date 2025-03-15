@@ -22,6 +22,7 @@ import OISummary from "@/pages/OISummary";
 import PCR from "@/pages/PCR";
 import OHLCAnalysis from "@/pages/OHLCAnalysis";
 import ExecutionLogs from "@/pages/ExecutionLogs";
+import StrikeDetail from "@/pages/StrikeDetail";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const AnimatedRoutes = () => {
       <Route path="/oi-summary" element={<OISummary />} />
       <Route path="/ohlc-analysis" element={<OHLCAnalysis />} />
       <Route path="/execution-logs" element={<ExecutionLogs />} />
+      <Route path="/strike-detail/:symbol/:expiry/:strikePrice" element={<StrikeDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
