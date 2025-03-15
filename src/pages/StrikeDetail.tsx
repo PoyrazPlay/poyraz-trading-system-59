@@ -44,6 +44,7 @@ const StrikeDetail = () => {
   const [timeData, setTimeData] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usingFallbackData, setUsingFallbackData] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -72,6 +73,7 @@ const StrikeDetail = () => {
             .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Sort by most recent
           
           setTimeData(transformedData);
+          setUsingFallbackData(false);
           
           toast({
             title: "Data Loaded",
@@ -82,15 +84,17 @@ const StrikeDetail = () => {
         }
       } catch (error) {
         console.error("Error fetching strike price data:", error);
-        setError("Failed to load option data for this strike price");
+        setError("Failed to load option data for this strike price. Using fallback data.");
         
         // Generate mock data for demonstration
         const mockData = generateMockStrikeData();
         setTimeData(mockData);
+        setUsingFallbackData(true);
         
         toast({
-          title: "Using demo data",
-          description: "API connection failed. Using demonstration data instead.",
+          title: "Using fallback data",
+          description: "API connection failed. Using fallback data instead.",
+          variant: "destructive",
           duration: 5000,
         });
       } finally {
@@ -104,51 +108,79 @@ const StrikeDetail = () => {
   const generateMockStrikeData = (): TimeEntry[] => {
     const mockTimeEntries: TimeEntry[] = [];
     const currentDate = new Date();
+    const strikeNum = parseInt(strikePrice || "0");
     
     // Generate data entries for the last 10 time intervals (30 min each)
     for (let i = 0; i < 10; i++) {
       const timeStamp = new Date(currentDate);
       timeStamp.setMinutes(currentDate.getMinutes() - (i * 30));
       
-      const indexValue = 22500 + Math.floor(Math.random() * 200) - 100;
-      const strikeNum = parseInt(strikePrice || "0");
+      const indexValue = strikeNum + Math.floor(Math.random() * 200) - 100;
       
       const ceOptionPosition = strikeNum < indexValue ? "ITM" : "OTM";
       const peOptionPosition = strikeNum > indexValue ? "ITM" : "OTM";
       
+      const ceLtp = ceOptionPosition === "ITM" 
+        ? Math.max(10, Math.round((indexValue - strikeNum + Math.random() * 50) * 100) / 100)
+        : Math.max(5, Math.round((Math.random() * 30) * 100) / 100);
+
+      const peLtp = peOptionPosition === "ITM" 
+        ? Math.max(10, Math.round((strikeNum - indexValue + Math.random() * 50) * 100) / 100)
+        : Math.max(5, Math.round((Math.random() * 30) * 100) / 100);
+      
+      // Previous values to calculate changes
+      const prevCeOpenInterest = Math.floor(Math.random() * 500000) + 50000;
+      const prevPeOpenInterest = Math.floor(Math.random() * 500000) + 50000;
+      const prevCeBuyQuan = Math.floor(Math.random() * 50000) + 5000;
+      const prevPeBuyQuan = Math.floor(Math.random() * 50000) + 5000;
+      const prevCeSellQuan = Math.floor(Math.random() * 50000) + 5000;
+      const prevPeSellQuan = Math.floor(Math.random() * 50000) + 5000;
+      const prevCeVolume = Math.floor(Math.random() * 100000) + 10000;
+      const prevPeVolume = Math.floor(Math.random() * 100000) + 10000;
+
+      // Current values 
+      const ceOpenInterest = prevCeOpenInterest + Math.floor(Math.random() * 20000) - 10000;
+      const peOpenInterest = prevPeOpenInterest + Math.floor(Math.random() * 20000) - 10000;
+      const ceBuyQuan = prevCeBuyQuan + Math.floor(Math.random() * 10000) - 5000;
+      const peBuyQuan = prevPeBuyQuan + Math.floor(Math.random() * 10000) - 5000;
+      const ceSellQuan = prevCeSellQuan + Math.floor(Math.random() * 10000) - 5000;
+      const peSellQuan = prevPeSellQuan + Math.floor(Math.random() * 10000) - 5000;
+      const ceVolume = prevCeVolume + Math.floor(Math.random() * 5000) - 2500;
+      const peVolume = prevPeVolume + Math.floor(Math.random() * 5000) - 2500;
+
       mockTimeEntries.push({
         timestamp: timeStamp.toISOString().replace('T', ' ').slice(0, 19),
         CE: {
           Indexltp: indexValue,
-          change_in_opn_interest: Math.floor(Math.random() * 10000) - 5000,
-          change_in_total_buy_quan: Math.floor(Math.random() * 20000) - 10000,
-          change_in_total_sell_quan: Math.floor(Math.random() * 20000) - 10000,
-          change_in_trade_volume: Math.floor(Math.random() * 10000) - 5000,
-          ltp: ceOptionPosition === "ITM" ? (indexValue - strikeNum + Math.random() * 50) : (Math.random() * 50),
-          opn_interest: Math.floor(Math.random() * 500000) + 100000,
+          change_in_opn_interest: ceOpenInterest - prevCeOpenInterest,
+          change_in_total_buy_quan: ceBuyQuan - prevCeBuyQuan,
+          change_in_total_sell_quan: ceSellQuan - prevCeSellQuan,
+          change_in_trade_volume: ceVolume - prevCeVolume,
+          ltp: ceLtp,
+          opn_interest: ceOpenInterest,
           option_position: ceOptionPosition,
           option_type: "CE",
           symbol: `${symbol}${expiry}${strikePrice}CE`,
-          token: "12345",
-          total_buy_quan: Math.floor(Math.random() * 50000) + 10000,
-          total_sell_quan: Math.floor(Math.random() * 50000) + 10000,
-          trade_volume: Math.floor(Math.random() * 100000) + 20000,
+          token: "45426",
+          total_buy_quan: ceBuyQuan,
+          total_sell_quan: ceSellQuan,
+          trade_volume: ceVolume,
         },
         PE: {
           Indexltp: indexValue,
-          change_in_opn_interest: Math.floor(Math.random() * 10000) - 5000,
-          change_in_total_buy_quan: Math.floor(Math.random() * 20000) - 10000,
-          change_in_total_sell_quan: Math.floor(Math.random() * 20000) - 10000,
-          change_in_trade_volume: Math.floor(Math.random() * 10000) - 5000,
-          ltp: peOptionPosition === "ITM" ? (strikeNum - indexValue + Math.random() * 50) : (Math.random() * 50),
-          opn_interest: Math.floor(Math.random() * 500000) + 100000,
+          change_in_opn_interest: peOpenInterest - prevPeOpenInterest,
+          change_in_total_buy_quan: peBuyQuan - prevPeBuyQuan,
+          change_in_total_sell_quan: peSellQuan - prevPeSellQuan,
+          change_in_trade_volume: peVolume - prevPeVolume,
+          ltp: peLtp,
+          opn_interest: peOpenInterest,
           option_position: peOptionPosition,
           option_type: "PE",
           symbol: `${symbol}${expiry}${strikePrice}PE`,
-          token: "12346",
-          total_buy_quan: Math.floor(Math.random() * 50000) + 10000,
-          total_sell_quan: Math.floor(Math.random() * 50000) + 10000,
-          trade_volume: Math.floor(Math.random() * 100000) + 20000,
+          token: "45427",
+          total_buy_quan: peBuyQuan,
+          total_sell_quan: peSellQuan,
+          trade_volume: peVolume,
         }
       });
     }
@@ -199,6 +231,7 @@ const StrikeDetail = () => {
             </Button>
             <div className="text-xl font-semibold">
               {symbol} {expiry} @ {strikePrice}
+              {usingFallbackData && <span className="ml-2 text-sm font-normal text-destructive">(Using Fallback Data)</span>}
             </div>
           </div>
           
@@ -237,28 +270,28 @@ const StrikeDetail = () => {
                   {timeData.map((entry, index) => (
                     <TableRow key={index} className={index % 2 === 0 ? "bg-muted/5" : ""}>
                       {/* CE Data */}
-                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.CE.opn_interest)}
                         <div className={getColorClass(entry.CE.change_in_opn_interest, true)}>
                           ({formatNumber(entry.CE.change_in_opn_interest)})
                         </div>
                       </TableCell>
-                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.CE.trade_volume)}
                         <div className={getColorClass(entry.CE.change_in_trade_volume, true)}>
                           ({formatNumber(entry.CE.change_in_trade_volume)})
                         </div>
                       </TableCell>
-                      <TableCell className={`text-xs font-semibold ${entry.CE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs font-semibold ${entry.CE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {entry.CE.ltp.toFixed(2)}
                       </TableCell>
-                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.CE.total_buy_quan)}
                         <div className={getColorClass(entry.CE.change_in_total_buy_quan, true)}>
                           ({formatNumber(entry.CE.change_in_total_buy_quan)})
                         </div>
                       </TableCell>
-                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.CE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.CE.total_sell_quan)}
                         <div className={getColorClass(entry.CE.change_in_total_sell_quan, true)}>
                           ({formatNumber(entry.CE.change_in_total_sell_quan)})
@@ -274,28 +307,28 @@ const StrikeDetail = () => {
                       </TableCell>
                       
                       {/* PE Data */}
-                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.PE.total_sell_quan)}
                         <div className={getColorClass(entry.PE.change_in_total_sell_quan, true)}>
                           ({formatNumber(entry.PE.change_in_total_sell_quan)})
                         </div>
                       </TableCell>
-                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.PE.total_buy_quan)}
                         <div className={getColorClass(entry.PE.change_in_total_buy_quan, true)}>
                           ({formatNumber(entry.PE.change_in_total_buy_quan)})
                         </div>
                       </TableCell>
-                      <TableCell className={`text-xs font-semibold ${entry.PE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs font-semibold ${entry.PE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {entry.PE.ltp.toFixed(2)}
                       </TableCell>
-                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.PE.trade_volume)}
                         <div className={getColorClass(entry.PE.change_in_trade_volume, true)}>
                           ({formatNumber(entry.PE.change_in_trade_volume)})
                         </div>
                       </TableCell>
-                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50" : ""}`}>
+                      <TableCell className={`text-xs ${entry.PE.option_position === "ITM" ? "bg-green-50 dark:bg-green-950/20" : ""}`}>
                         {formatNumber(entry.PE.opn_interest)}
                         <div className={getColorClass(entry.PE.change_in_opn_interest, true)}>
                           ({formatNumber(entry.PE.change_in_opn_interest)})
