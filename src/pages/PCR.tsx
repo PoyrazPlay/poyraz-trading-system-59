@@ -3,11 +3,27 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { useToast } from '@/hooks/use-toast';
+import { TrendingUp, ChartLine, Gauge } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+// Define the interface for the PCR data
+interface PCRData {
+  volume_pcr: string;
+  indexLtp?: number;
+  MarketMoodIndex?: number;
+}
 
 const PCR = () => {
   const [symbol, setSymbol] = useState('');
   const [expiry, setExpiry] = useState('');
-  const [data, setData] = useState<Record<string, { volume_pcr: string }> | null>(null);
+  const [data, setData] = useState<Record<string, PCRData> | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [symbols, setSymbols] = useState<string[]>([]);
   const [expiries, setExpiries] = useState<string[]>([]);
@@ -88,7 +104,7 @@ const PCR = () => {
 
   // Generate mock data for demo purposes
   const generateMockPCRData = () => {
-    const mockData: Record<string, { volume_pcr: string }> = {};
+    const mockData: Record<string, PCRData> = {};
     const today = new Date();
     
     for (let i = 0; i < 24; i++) {
@@ -99,8 +115,14 @@ const PCR = () => {
         const timestamp = date.toISOString().split('T')[0] + ' ' + 
           date.toTimeString().split(' ')[0].substring(0, 5);
         
+        const indexValue = 22000 + Math.random() * 500;
+        const pcr = (Math.random() * 1.5 + 0.5).toFixed(2);
+        const mmi = Math.round(Math.random() * 100);
+        
         mockData[timestamp] = {
-          volume_pcr: (Math.random() * 1.5 + 0.5).toFixed(2)
+          volume_pcr: pcr,
+          indexLtp: parseFloat(indexValue.toFixed(2)),
+          MarketMoodIndex: mmi
         };
       }
     }
@@ -144,6 +166,14 @@ const PCR = () => {
   const filteredData = data && selectedDate 
     ? Object.entries(data).filter(([timestamp]) => timestamp.startsWith(selectedDate)) 
     : Object.entries(data || {});
+
+  // Helper function to get MMI status color
+  const getMmiStatusColor = (mmi: number | undefined) => {
+    if (!mmi) return '';
+    if (mmi >= 70) return 'text-green-600';
+    if (mmi <= 30) return 'text-red-600';
+    return 'text-amber-600';
+  };
 
   return (
     <HomeLayout title="Put/Call Ratio Analysis">
@@ -215,39 +245,68 @@ const PCR = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-3 px-4 text-left font-medium">Time</th>
-                  <th className="py-3 px-4 text-left font-medium">Volume PCR</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      <ChartLine size={16} />
+                      <span>Index Price</span>
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp size={16} />
+                      <span>Volume PCR</span>
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      <Gauge size={16} />
+                      <span>Market Mood Index</span>
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredData.length > 0 ? (
                   filteredData.map(([timestamp, entry], index) => (
-                    <tr key={index} className="border-b border-border/40 hover:bg-muted/30">
-                      <td className="py-3 px-4">{timestamp}</td>
-                      <td className="py-3 px-4">
+                    <TableRow key={index}>
+                      <TableCell>{timestamp}</TableCell>
+                      <TableCell>
+                        {entry.indexLtp ? 
+                          entry.indexLtp.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : 
+                          'N/A'}
+                      </TableCell>
+                      <TableCell>
                         <span 
                           className={`font-medium ${
-                            parseFloat(entry.volume_pcr) > 1 ? 'text-green-600' : 
-                            parseFloat(entry.volume_pcr) < 0.8 ? 'text-red-600' : 'text-amber-600'
+                            parseFloat(entry.volume_pcr as string) > 1 ? 'text-green-600' : 
+                            parseFloat(entry.volume_pcr as string) < 0.8 ? 'text-red-600' : 'text-amber-600'
                           }`}
                         >
                           {entry.volume_pcr}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell>
+                        {entry.MarketMoodIndex !== undefined ? (
+                          <span className={`font-medium ${getMmiStatusColor(entry.MarketMoodIndex)}`}>
+                            {entry.MarketMoodIndex.toFixed(2)}
+                          </span>
+                        ) : 'N/A'}
+                      </TableCell>
+                    </TableRow>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={2} className="py-8 text-center text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                       No PCR data available for the selected criteria
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
