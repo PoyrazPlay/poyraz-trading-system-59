@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import apiClient from '@/utils/apiService';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -25,16 +26,13 @@ const Login = () => {
     }
     
     try {
-      // Try to call the API
-      const response = await fetch('http://54.221.81.212:5000/authenticate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
+      // Using the centralized API client instead of direct fetch
+      const response = await apiClient.post('/authenticate', {
+        username,
+        password
       });
 
-      const data = await response.json();
+      const data = response.data;
       
       if (data.success) {
         toast({
