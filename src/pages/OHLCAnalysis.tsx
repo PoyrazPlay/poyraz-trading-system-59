@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Clock, RefreshCw } from 'lucide-react';
+import { BarChart3, Clock, RefreshCw, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,6 +27,10 @@ interface OHLCData {
 interface APIResponse {
   interval: IntervalType;
   ohlc_data: OHLCData;
+}
+
+interface DatesResponse {
+  dates: string[];
 }
 
 // Demo data for testing and fallback
@@ -64,9 +67,30 @@ const demoData: OHLCData = {
   }
 };
 
-// Function to fetch OHLC data with selected interval
-const fetchOHLCData = async (interval: IntervalType): Promise<APIResponse> => {
-  const response = await fetch(`http://54.221.81.212:5000/get_ohlc_data?interval=${interval}`);
+// Function to fetch available dates
+const fetchAvailableDates = async (): Promise<string[]> => {
+  try {
+    const response = await fetch('http://54.221.81.212:5000/available_ohlc_data_dates');
+    if (!response.ok) {
+      throw new Error('Failed to fetch available dates');
+    }
+    const data: DatesResponse = await response.json();
+    return data.dates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  } catch (error) {
+    console.error('Error fetching dates:', error);
+    return ['2025-03-15', '2025-03-09', '2025-03-08', '2025-03-07'];
+  }
+};
+
+// Function to fetch OHLC data with selected interval and date
+const fetchOHLCData = async (interval: IntervalType, date?: string): Promise<APIResponse> => {
+  let url = `http://54.221.81.212:5000/get_ohlc_data?interval=${interval}`;
+  
+  if (date) {
+    url += `&date=${date}`;
+  }
+  
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to fetch OHLC data');
   }
@@ -75,11 +99,27 @@ const fetchOHLCData = async (interval: IntervalType): Promise<APIResponse> => {
 
 const OHLCAnalysis: React.FC = () => {
   const [interval, setInterval] = useState<IntervalType>('FIVE_MINUTE');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadDates = async () => {
+      const dates = await fetchAvailableDates();
+      setAvailableDates(dates);
+      
+      if (dates.length > 0 && !selectedDate) {
+        setSelectedDate(dates[0]);
+      }
+    };
+    
+    loadDates();
+  }, []);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['ohlcData', interval],
-    queryFn: () => fetchOHLCData(interval),
-    refetchInterval: 300000, // Refresh every 5 minutes
+    queryKey: ['ohlcData', interval, selectedDate],
+    queryFn: () => fetchOHLCData(interval, selectedDate),
+    refetchInterval: 300000,
+    enabled: !!selectedDate,
     meta: {
       onError: () => {
         toast({
@@ -91,13 +131,11 @@ const OHLCAnalysis: React.FC = () => {
     }
   });
 
-  // Process the data for display
   const processedData = React.useMemo(() => {
     if (!data) return demoData;
     return data.ohlc_data || demoData;
   }, [data]);
 
-  // Convert the data object to array for easier mapping in the table
   const tableData = React.useMemo(() => {
     return Object.entries(processedData).map(([timestamp, values]) => ({
       timestamp,
@@ -129,9 +167,8 @@ const OHLCAnalysis: React.FC = () => {
   return (
     <HomeLayout 
       title="OHLC Analysis" 
-      subtitle="Real-time market data"
+      subtitle="Real-time and historical market data"
     >
-      {/* OHLC Data Table with Interval Selector */}
       <Card className="w-full max-w-7xl card-hover">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -145,6 +182,30 @@ const OHLCAnalysis: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Date:</span>
+              <Select
+                value={selectedDate}
+                onValueChange={setSelectedDate}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select date">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {selectedDate || "Select date"}
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDates.map((date) => (
+                    <SelectItem key={date} value={date}>
+                      {date}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Interval:</span>
               <Select
@@ -189,24 +250,32 @@ const OHLCAnalysis: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {tableData.map((row, index) => (
-                  <tr key={index} className="border-b hover:bg-muted/50">
-                    <td className="py-2 px-2 font-medium">{row.timestamp}</td>
-                    <td className="py-2 px-2 text-right">{row.open.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-right">{row.high.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-right">{row.low.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-right">{row.close.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-right">{row.atr.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-right">{row.volatility_bbw.toFixed(3)}</td>
-                    <td className="py-2 px-2 text-right">{row.Adx_slope.toFixed(2)}</td>
-                    <td className="py-2 px-2 text-center">
-                      <div 
-                        className={`w-4 h-4 rounded-full mx-auto ${row.ha_color === 'green' ? 'bg-green-500' : 'bg-red-500'}`}
-                        title={`Heikin-Ashi: ${row.ha_color}`}
-                      />
+                {tableData.length > 0 ? (
+                  tableData.map((row, index) => (
+                    <tr key={index} className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-2 font-medium">{row.timestamp}</td>
+                      <td className="py-2 px-2 text-right">{row.open.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right">{row.high.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right">{row.low.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right">{row.close.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right">{row.atr.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right">{row.volatility_bbw.toFixed(3)}</td>
+                      <td className="py-2 px-2 text-right">{row.Adx_slope.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-center">
+                        <div 
+                          className={`w-4 h-4 rounded-full mx-auto ${row.ha_color === 'green' ? 'bg-green-500' : 'bg-red-500'}`}
+                          title={`Heikin-Ashi: ${row.ha_color}`}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={9} className="py-6 text-center text-muted-foreground">
+                      No data available for the selected date and interval.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -218,9 +287,14 @@ const OHLCAnalysis: React.FC = () => {
             Last update: {new Date().toLocaleTimeString()}
           </p>
           
-          <p className="text-sm text-muted-foreground">
-            Interval: {interval === 'ONE_MINUTE' ? '1 Minute' : '5 Minutes'}
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Date: {selectedDate || "Not selected"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Interval: {interval === 'ONE_MINUTE' ? '1 Minute' : '5 Minutes'}
+            </p>
+          </div>
         </CardFooter>
       </Card>
     </HomeLayout>
