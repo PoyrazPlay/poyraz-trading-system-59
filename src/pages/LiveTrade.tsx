@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from 'react';
-import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon, ActivityIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon, ActivityIcon, CircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 // Define type for LiveTradeData
 interface LiveTradeData {
@@ -28,6 +29,7 @@ interface LiveTradeData {
   index_closing?: number;
   trade_opening_time?: string;
   trade_closing_time?: string;
+  ohlc_colorString?: string;
 }
 
 // Demo data for development and testing
@@ -50,7 +52,36 @@ const demoTradeData: LiveTradeData = {
   index_opening: 22034.75,
   index_closing: 0,
   trade_opening_time: "2023-11-02 09:30:15",
-  trade_closing_time: ""
+  trade_closing_time: "",
+  ohlc_colorString: "GGRRRRRRRG"
+};
+
+// OHLC Color Indicator Component
+const OHLCColorIndicator = ({ colorString }: { colorString?: string }) => {
+  if (!colorString) return null;
+  
+  return (
+    <div className="flex flex-col space-y-2">
+      <h3 className="text-sm font-medium">OHLC Trend</h3>
+      <div className="flex items-center space-x-1">
+        {colorString.split('').map((color, index) => (
+          <CircleIcon 
+            key={index} 
+            className={`h-4 w-4 ${color === 'G' ? 'text-emerald-500 fill-emerald-500' : 'text-rose-500 fill-rose-500'}`}
+            aria-label={color === 'G' ? 'Green' : 'Red'}
+          />
+        ))}
+      </div>
+      <div className="text-xs text-muted-foreground">
+        <span className="inline-flex items-center mr-2">
+          <CircleIcon className="h-3 w-3 mr-1 text-emerald-500 fill-emerald-500" /> Green (Bullish)
+        </span>
+        <span className="inline-flex items-center">
+          <CircleIcon className="h-3 w-3 mr-1 text-rose-500 fill-rose-500" /> Red (Bearish)
+        </span>
+      </div>
+    </div>
+  );
 };
 
 const LiveTrade = () => {
@@ -276,8 +307,12 @@ const LiveTrade = () => {
 
             <Separator className="my-6" />
 
-            {/* Time and Index Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* OHLC Color String */}
+              <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <OHLCColorIndicator colorString={data.ohlc_colorString} />
+              </div>
+
               {/* Times Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Trade Times</h3>
