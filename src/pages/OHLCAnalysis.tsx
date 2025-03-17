@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import apiClient from '@/utils/apiService';
 
 // Define the interval types
 type IntervalType = 'ONE_MINUTE' | 'FIVE_MINUTE';
@@ -70,11 +71,8 @@ const demoData: OHLCData = {
 // Function to fetch available dates
 const fetchAvailableDates = async (): Promise<string[]> => {
   try {
-    const response = await fetch('http://54.221.81.212:5000/available_ohlc_data_dates');
-    if (!response.ok) {
-      throw new Error('Failed to fetch available dates');
-    }
-    const data: DatesResponse = await response.json();
+    const response = await apiClient.get('/available_ohlc_data_dates');
+    const data: DatesResponse = response.data;
     return data.dates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   } catch (error) {
     console.error('Error fetching dates:', error);
@@ -84,17 +82,14 @@ const fetchAvailableDates = async (): Promise<string[]> => {
 
 // Function to fetch OHLC data with selected interval and date
 const fetchOHLCData = async (interval: IntervalType, date?: string): Promise<APIResponse> => {
-  let url = `http://54.221.81.212:5000/get_ohlc_data?interval=${interval}`;
+  let params: Record<string, string> = { interval };
   
   if (date) {
-    url += `&date=${date}`;
+    params.date = date;
   }
   
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch OHLC data');
-  }
-  return response.json();
+  const response = await apiClient.get('/get_ohlc_data', { params });
+  return response.data;
 };
 
 const OHLCAnalysis: React.FC = () => {
