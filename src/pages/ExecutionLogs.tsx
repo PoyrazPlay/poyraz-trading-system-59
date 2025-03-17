@@ -8,6 +8,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { FileText, AlertTriangle, CheckCircle, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { fallbackDates, getFallbackLogContent } from '@/utils/execLogsData';
+import apiClient from '@/utils/apiService';
 
 interface DatesResponse {
   exec_dates: string[];
@@ -20,11 +21,8 @@ interface LogContentResponse {
 
 const fetchAvailableDates = async (): Promise<string[]> => {
   try {
-    const response = await fetch('http://54.221.81.212:5000/get_exec_dates');
-    if (!response.ok) {
-      throw new Error('Failed to fetch execution dates');
-    }
-    const data: DatesResponse = await response.json();
+    const response = await apiClient.get('/get_exec_dates');
+    const data: DatesResponse = response.data;
     return data.exec_dates;
   } catch (error) {
     console.error("Error fetching dates:", error);
@@ -34,11 +32,10 @@ const fetchAvailableDates = async (): Promise<string[]> => {
 
 const fetchLogContent = async (date: string): Promise<string> => {
   try {
-    const response = await fetch(`http://54.221.81.212:5000/get_exec_log?date=${date}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch execution log content');
-    }
-    const data: LogContentResponse = await response.json();
+    const response = await apiClient.get('/get_exec_log', {
+      params: { date }
+    });
+    const data: LogContentResponse = response.data;
     return data.log_content;
   } catch (error) {
     console.error(`Error fetching log content for date ${date}:`, error);

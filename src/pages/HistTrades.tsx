@@ -4,9 +4,9 @@ import HomeLayout from '@/components/layout/HomeLayout';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronDown, ChevronUp, CircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import apiClient from '@/utils/apiService';
 
 interface TradeDataPoint {
   Timestamp: string;
@@ -78,13 +78,12 @@ const HistTrades = () => {
   const fetchAvailableDates = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://54.221.81.212:5000/available_hist_trade_dates');
-      const data = await response.json();
+      const response = await apiClient.get('/available_hist_trade_dates');
       
-      if (data && Array.isArray(data.dates)) {
-        setDates(data.dates);
-        if (data.dates.length > 0) {
-          setSelectedDate(data.dates[0]);
+      if (response.data && Array.isArray(response.data.dates)) {
+        setDates(response.data.dates);
+        if (response.data.dates.length > 0) {
+          setSelectedDate(response.data.dates[0]);
         }
       } else {
         throw new Error("Invalid data format for dates");
@@ -117,9 +116,10 @@ const HistTrades = () => {
   const fetchTradeData = async (date: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://54.221.81.212:5000/hist_trade_data?date=${date}`);
-      const data = await response.json();
-      setTradeData(data);
+      const response = await apiClient.get(`/hist_trade_data`, {
+        params: { date }
+      });
+      setTradeData(response.data);
       toast({
         title: "Data Loaded",
         description: `Loaded trade data for ${date}`,

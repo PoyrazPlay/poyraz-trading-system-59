@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon, ActivityIcon, CircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,6 +6,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import apiClient from '@/utils/apiService';
 
 // Define type for LiveTradeData
 interface LiveTradeData {
@@ -93,14 +93,9 @@ const LiveTrade = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://54.221.81.212:5000:5000/live_trade');
+        const response = await apiClient.get('/live_trade');
         
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setTradeData(data);
+        setTradeData(response.data);
         toast.success("Live trade data updated");
       } catch (error) {
         console.error('Error fetching live trade data:', error);

@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { useToast } from '@/hooks/use-toast';
 import { TrendingUp, ChartLine, Gauge } from 'lucide-react';
+import apiClient from '@/utils/apiService';
 import {
   Table,
   TableBody,
@@ -37,8 +36,8 @@ const PCR = () => {
   const fetchSymbolsAndExpiries = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://54.221.81.212:5000/symbols_expiries");
-      const symbolsExpiries = await response.json();
+      const response = await apiClient.get("/symbols_expiries");
+      const symbolsExpiries = response.data;
       
       if (Object.keys(symbolsExpiries).length > 0) {
         const initialSymbol = Object.keys(symbolsExpiries)[0];
@@ -77,7 +76,7 @@ const PCR = () => {
   const fetchPCRData = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://54.221.81.212:5000/pcr_data', {
+      const response = await apiClient.get('/pcr_data', {
         params: { symbol, expiry }
       });
       setData(response.data);
@@ -139,11 +138,10 @@ const PCR = () => {
     setSymbol(newSymbol);
     
     try {
-      fetch(`http://54.221.81.212:5000/symbols_expiries`)
-        .then((response) => response.json())
-        .then((symbolsExpiries) => {
-          setExpiries(symbolsExpiries[newSymbol]);
-          setExpiry(symbolsExpiries[newSymbol][0]);
+      apiClient.get(`/symbols_expiries`)
+        .then((response) => {
+          setExpiries(response.data[newSymbol]);
+          setExpiry(response.data[newSymbol][0]);
         });
     } catch (error) {
       console.error("Error fetching expiries:", error);

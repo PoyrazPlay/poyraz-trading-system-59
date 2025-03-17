@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronDown, ChevronUp, CircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import apiClient from '@/utils/apiService';
 
 interface TradeDataPoint {
   Timestamp: string;
@@ -73,11 +72,10 @@ const TodaysTrade = () => {
   const fetchTradesData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://54.221.81.212:5000/todays_trades');
-      const data = await response.json();
+      const response = await apiClient.get('/todays_trades');
       
       // Transform the data to match the expected format
-      const formattedTrades = Object.entries(data).map(([id, trade]) => ({ 
+      const formattedTrades = Object.entries(response.data).map(([id, trade]) => ({ 
         id, 
         ...trade as Omit<Trade, 'id'> 
       }));

@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import HomeLayout from '@/components/layout/HomeLayout';
-import axios from 'axios';
 import { useToast } from "@/hooks/use-toast";
+import apiClient from '@/utils/apiService';
 import { 
   Table,
   TableBody,
@@ -52,7 +52,7 @@ const StrikeDetail = () => {
     const fetchStrikeData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://54.221.81.212:5000/option_chain_by_strike_price`, {
+        const response = await apiClient.get(`/option_chain_by_strike_price`, {
           params: { 
             symbol, 
             expiry, 
