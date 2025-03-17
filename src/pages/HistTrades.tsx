@@ -11,9 +11,9 @@ import apiClient from '@/utils/apiService';
 interface TradeDataPoint {
   Timestamp: string;
   ColorString: string;
-  'CE PNL': string;
-  'MAX CE PNL': string;
-  'MIN CE PNL': string;
+  PNL: string;
+  'MAX PNL': string;
+  'MIN PNL': string;
   LTP_OPT: string;
   SL: string;
 }
@@ -187,7 +187,7 @@ const HistTrades = () => {
       const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
       const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
       
-      // Generate mock trade data points
+      // Generate mock trade data points with updated parameter names
       const tradeData: TradeDataPoint[] = [];
       const randomColorString = colorOptions[Math.floor(Math.random() * colorOptions.length)];
       
@@ -199,9 +199,9 @@ const HistTrades = () => {
         tradeData.push({
           Timestamp: currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
           ColorString: randomColorString,
-          'CE PNL': currentPnl + '%',
-          'MAX CE PNL': (parseFloat(currentPnl) + 1).toFixed(2) + '%',
-          'MIN CE PNL': (parseFloat(currentPnl) - 1).toFixed(2) + '%',
+          'PNL': currentPnl,
+          'MAX PNL': (parseFloat(currentPnl) + 1).toFixed(2),
+          'MIN PNL': (parseFloat(currentPnl) - 1).toFixed(2),
           'LTP_OPT': (openPrice + j * 5).toString(),
           'SL': (-3000).toString(),
         });
@@ -338,9 +338,9 @@ const HistTrades = () => {
                                     <TableRow>
                                       <TableHead>Timestamp</TableHead>
                                       <TableHead>OHLC Colors</TableHead>
-                                      <TableHead>CE PNL</TableHead>
-                                      <TableHead>MAX CE PNL</TableHead>
-                                      <TableHead>MIN CE PNL</TableHead>
+                                      <TableHead>PNL</TableHead>
+                                      <TableHead>MAX PNL</TableHead>
+                                      <TableHead>MIN PNL</TableHead>
                                       <TableHead>LTP Option</TableHead>
                                       <TableHead>Stop Loss</TableHead>
                                     </TableRow>
@@ -352,11 +352,11 @@ const HistTrades = () => {
                                         <TableCell>
                                           <OHLCColorIndicator colorString={dataPoint.ColorString} />
                                         </TableCell>
-                                        <TableCell className={dataPoint['CE PNL'].includes('-') ? 'text-red-600' : 'text-green-600'}>
-                                          {dataPoint['CE PNL']}
+                                        <TableCell className={dataPoint['PNL'].includes('-') ? 'text-red-600' : 'text-green-600'}>
+                                          {dataPoint['PNL']}
                                         </TableCell>
-                                        <TableCell className="text-green-600">{dataPoint['MAX CE PNL']}</TableCell>
-                                        <TableCell className="text-red-600">{dataPoint['MIN CE PNL']}</TableCell>
+                                        <TableCell className="text-green-600">{dataPoint['MAX PNL']}</TableCell>
+                                        <TableCell className="text-red-600">{dataPoint['MIN PNL']}</TableCell>
                                         <TableCell>{dataPoint.LTP_OPT}</TableCell>
                                         <TableCell className="text-red-600">{dataPoint.SL}</TableCell>
                                       </TableRow>

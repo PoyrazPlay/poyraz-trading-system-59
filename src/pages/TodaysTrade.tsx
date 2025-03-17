@@ -10,9 +10,9 @@ import apiClient from '@/utils/apiService';
 interface TradeDataPoint {
   Timestamp: string;
   ColorString: string;
-  'CE PNL': string;
-  'MAX CE PNL': string;
-  'MIN CE PNL': string;
+  PNL: string;
+  'MAX PNL': string;
+  'MIN PNL': string;
   LTP_OPT: string;
   SL: string;
 }
@@ -35,7 +35,6 @@ interface Trade {
   TradeData?: TradeDataPoint[];
 }
 
-// OHLC Color Indicator Component (reused from LiveTrade page)
 const OHLCColorIndicator = ({ colorString }: { colorString?: string }) => {
   if (!colorString) return null;
   
@@ -56,6 +55,7 @@ const TodaysTrade = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedTrades, setExpandedTrades] = useState<{[key: string]: boolean}>({});
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,7 +74,6 @@ const TodaysTrade = () => {
     try {
       const response = await apiClient.get('/todays_trades');
       
-      // Transform the data to match the expected format
       const formattedTrades = Object.entries(response.data).map(([id, trade]) => ({ 
         id, 
         ...trade as Omit<Trade, 'id'> 
@@ -93,7 +92,6 @@ const TodaysTrade = () => {
         variant: "destructive",
       });
       
-      // Mock data for demo if API fails
       const mockTrades = generateMockTradesData();
       setTrades(mockTrades);
     } finally {
@@ -101,7 +99,6 @@ const TodaysTrade = () => {
     }
   };
 
-  // Generate mock data for demo purposes
   const generateMockTradesData = (): Trade[] => {
     const mockData: Trade[] = [];
     const symbols = ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "INFY"];
@@ -116,7 +113,6 @@ const TodaysTrade = () => {
       const minPnl = (parseFloat(pnl) - Math.random() * 5).toFixed(2);
       const totalProfit = (investedValue * parseFloat(pnl) / 100).toFixed(2);
       
-      // Generate times a few hours apart
       const today = new Date();
       const openTime = new Date(today);
       openTime.setHours(9 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 60), 0);
@@ -124,12 +120,10 @@ const TodaysTrade = () => {
       const closeTime = new Date(openTime);
       closeTime.setHours(closeTime.getHours() + Math.floor(Math.random() * 3) + 1, Math.floor(Math.random() * 60), 0);
       
-      // Calculate duration
       const durationMs = closeTime.getTime() - openTime.getTime();
       const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
       const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
       
-      // Create mock trade data points
       const tradeData: TradeDataPoint[] = [];
       const colorOptions = ["GGRRRRRRRR", "GGGRRRRRR", "GGGGGRRRRR", "RRRRRGGGGG"];
       const randomColorString = colorOptions[Math.floor(Math.random() * colorOptions.length)];
@@ -142,9 +136,9 @@ const TodaysTrade = () => {
         tradeData.push({
           Timestamp: currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
           ColorString: randomColorString,
-          'CE PNL': currentPnl + '%',
-          'MAX CE PNL': (parseFloat(currentPnl) + 1).toFixed(2) + '%',
-          'MIN CE PNL': (parseFloat(currentPnl) - 1).toFixed(2) + '%',
+          'PNL': currentPnl,
+          'MAX PNL': (parseFloat(currentPnl) + 1).toFixed(2),
+          'MIN PNL': (parseFloat(currentPnl) - 1).toFixed(2),
           'LTP_OPT': (openPrice + j * 5).toString(),
           'SL': (-3000).toString(),
         });
@@ -266,9 +260,9 @@ const TodaysTrade = () => {
                                     <TableRow>
                                       <TableHead>Timestamp</TableHead>
                                       <TableHead>OHLC Colors</TableHead>
-                                      <TableHead>CE PNL</TableHead>
-                                      <TableHead>MAX CE PNL</TableHead>
-                                      <TableHead>MIN CE PNL</TableHead>
+                                      <TableHead>PNL</TableHead>
+                                      <TableHead>MAX PNL</TableHead>
+                                      <TableHead>MIN PNL</TableHead>
                                       <TableHead>LTP Option</TableHead>
                                       <TableHead>Stop Loss</TableHead>
                                     </TableRow>
@@ -280,11 +274,11 @@ const TodaysTrade = () => {
                                         <TableCell>
                                           <OHLCColorIndicator colorString={dataPoint.ColorString} />
                                         </TableCell>
-                                        <TableCell className={dataPoint['CE PNL'].includes('-') ? 'text-red-600' : 'text-green-600'}>
-                                          {dataPoint['CE PNL']}
+                                        <TableCell className={dataPoint['PNL'].includes('-') ? 'text-red-600' : 'text-green-600'}>
+                                          {dataPoint['PNL']}
                                         </TableCell>
-                                        <TableCell className="text-green-600">{dataPoint['MAX CE PNL']}</TableCell>
-                                        <TableCell className="text-red-600">{dataPoint['MIN CE PNL']}</TableCell>
+                                        <TableCell className="text-green-600">{dataPoint['MAX PNL']}</TableCell>
+                                        <TableCell className="text-red-600">{dataPoint['MIN PNL']}</TableCell>
                                         <TableCell>{dataPoint.LTP_OPT}</TableCell>
                                         <TableCell className="text-red-600">{dataPoint.SL}</TableCell>
                                       </TableRow>
