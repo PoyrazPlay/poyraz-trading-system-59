@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
 import MenuCard from '@/components/ui/menu-card';
@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LineChart, BarChart, PieChart, Activity, TrendingUp, Calendar, Eye, History, HelpCircle, FileText, CandlestickChart, Wallet, IndianRupee, RefreshCw, AlertTriangle, LineChartIcon, List, ArrowRight } from 'lucide-react';
+import { LineChart, BarChart, PieChart, Activity, TrendingUp, Calendar, Eye, History, FileText, 
+         CandlestickChart, Wallet, IndianRupee, RefreshCw, AlertTriangle, LineChartIcon, List, ArrowRight } from 'lucide-react';
 import apiClient from '@/utils/apiService';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Types for user PNL data
 interface DailyPNL {
@@ -43,6 +45,30 @@ const fetchUserPNL = async (): Promise<UserPNLResponse> => {
     console.error("Error fetching user PNL:", error);
     throw error;
   }
+};
+
+// Fallback data for when API fails
+const fallbackPNLData: UserPNLResponse = {
+  daily_pnl: [
+    {
+      date: "2025-03-16",
+      pnl: 18600,
+      pnlPercentage: 4,
+      walletBalance: 570040
+    },
+    {
+      date: "2025-03-17",
+      pnl: -10600,
+      pnlPercentage: -2.8,
+      walletBalance: 559020
+    },
+    {
+      date: "2025-03-18",
+      pnl: 32960,
+      pnlPercentage: 9.2,
+      walletBalance: 590640
+    }
+  ]
 };
 
 const Home = () => {
@@ -118,26 +144,32 @@ const Home = () => {
     { 
       title: "Live Trade", 
       path: "/live-trade", 
-      icon: <Activity />,
+      icon: <Activity className="h-6 w-6" />,
       description: "Track current trading activity in real-time"
     },
     { 
       title: "Today's Trade", 
       path: "/todays-trade", 
-      icon: <Calendar />,
+      icon: <Calendar className="h-6 w-6" />,
       description: "View trading data for the current day"
     },
     { 
       title: "Historical Trades", 
       path: "/hist-trades", 
-      icon: <History />,
+      icon: <History className="h-6 w-6" />,
       description: "Access past trading records and analysis"
     },
     { 
       title: "Execution Logs", 
       path: "/execution-logs", 
-      icon: <FileText />,
+      icon: <FileText className="h-6 w-6" />,
       description: "View detailed execution logs and errors"
+    },
+    {
+      title: "User Account", 
+      path: "/user-account", 
+      icon: <Wallet className="h-6 w-6" />,
+      description: "Track your wallet balance and trading performance"
     }
   ];
 
@@ -145,36 +177,34 @@ const Home = () => {
     { 
       title: "OHLC Analysis", 
       path: "/ohlc-analysis", 
-      icon: <CandlestickChart />,
+      icon: <CandlestickChart className="h-6 w-6" />,
       description: "Candlestick charts and technical indicators"
     },
     { 
       title: "Option Chain", 
       path: "/oi-detailed", 
-      icon: <LineChart />,
+      icon: <LineChart className="h-6 w-6" />,
       description: "Detailed option chain analysis"
     },
     { 
       title: "OI Summary", 
       path: "/oi-summary", 
-      icon: <BarChart />,
+      icon: <BarChart className="h-6 w-6" />,
       description: "Open interest summary and insights"
     },
     { 
       title: "PCR View", 
       path: "/pcr", 
-      icon: <PieChart />,
+      icon: <PieChart className="h-6 w-6" />,
       description: "Put/Call ratio visualization"
+    },
+    {
+      title: "Nifty 50", 
+      path: "/nifty50-constituents", 
+      icon: <List className="h-6 w-6" />,
+      description: "View weightage of top Nifty 50 stocks"
     }
   ];
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
 
   return (
     <HomeLayout 
@@ -201,92 +231,6 @@ const Home = () => {
               </div>
             ))}
           </div>
-          
-          <Card className="card-hover shadow-md mt-6 border-t-4 border-t-primary">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-primary" />
-                Account & Wallet Details
-              </CardTitle>
-              <CardDescription>
-                Track your wallet balance and trading performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pnlError ? (
-                <Alert variant="destructive" className="mb-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Failed to load account data. Server may be unavailable.
-                  </AlertDescription>
-                </Alert>
-              ) : isLoadingPNL ? (
-                <div className="flex items-center justify-center py-6">
-                  <div className="animate-spin h-6 w-6 border-t-2 border-primary rounded-full"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex justify-between items-center mb-4 bg-muted/30 p-3 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <IndianRupee className="h-5 w-5 text-primary" />
-                      <span className="text-sm font-medium">Current Balance:</span>
-                    </div>
-                    <span className="text-lg font-bold">
-                      {userPNLData?.daily_pnl?.[userPNLData.daily_pnl.length - 1] 
-                        ? formatCurrency(userPNLData.daily_pnl[userPNLData.daily_pnl.length - 1].walletBalance) 
-                        : "N/A"}
-                    </span>
-                  </div>
-                  
-                  <div className="overflow-hidden rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>P&L</TableHead>
-                          <TableHead>Change</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {userPNLData?.daily_pnl?.slice().reverse().slice(0, 3).map((day) => (
-                          <TableRow key={day.date}>
-                            <TableCell className="font-medium">{day.date}</TableCell>
-                            <TableCell className={day.pnl >= 0 ? "text-green-600" : "text-red-600"}>
-                              {formatCurrency(day.pnl)}
-                            </TableCell>
-                            <TableCell className={day.pnlPercentage >= 0 ? "text-green-600" : "text-red-600"}>
-                              {day.pnlPercentage > 0 ? "+" : ""}{day.pnlPercentage}%
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  
-                  <div className="mt-3 flex justify-between items-center">
-                    <button
-                      onClick={() => { 
-                        toast.info("Refreshing account data..."); 
-                        refetchPNL(); 
-                      }}
-                      className="text-xs flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Refresh
-                    </button>
-                    
-                    <Link to="/user-account">
-                      <Button variant="link" className="text-xs h-auto p-0 gap-1" asChild>
-                        <div className="flex items-center">
-                          View Details <ArrowRight className="h-3 w-3" />
-                        </div>
-                      </Button>
-                    </Link>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
         </div>
         
         <div className="space-y-6">
@@ -306,57 +250,6 @@ const Home = () => {
               </div>
             ))}
           </div>
-          
-          <Card className="card-hover shadow-md mt-6 border-t-4 border-t-primary">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <List className="h-5 w-5 text-primary" />
-                Nifty 50 Constituents
-              </CardTitle>
-              <CardDescription>
-                View weightage of top Nifty 50 stocks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[270px] pr-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead className="text-right">Weightage (%)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(nifty50Stocks)
-                      .sort((a, b) => b[1].weightage - a[1].weightage)
-                      .slice(0, 10)
-                      .map(([symbol, data]) => (
-                        <TableRow key={symbol}>
-                          <TableCell className="font-medium">{symbol.replace("-EQ", "")}</TableCell>
-                          <TableCell className="text-right">
-                            {data.weightage.toFixed(2)}%
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-              
-              <div className="mt-3 flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">
-                  Showing top 10 of {Object.keys(nifty50Stocks).length} stocks
-                </span>
-                
-                <Link to="/nifty50-constituents">
-                  <Button variant="link" className="text-xs h-auto p-0 gap-1" asChild>
-                    <div className="flex items-center">
-                      View All <ArrowRight className="h-3 w-3" />
-                    </div>
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </HomeLayout>
