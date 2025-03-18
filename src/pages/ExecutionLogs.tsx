@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { FileText, AlertTriangle, CheckCircle, Clock, Calendar } from 'lucide-react';
+import { FileText, AlertTriangle, RefreshCw, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { fallbackDates, getFallbackLogContent } from '@/utils/execLogsData';
 import apiClient from '@/utils/apiService';
@@ -17,7 +19,17 @@ interface DatesResponse {
 interface LogContentResponse {
   date: string;
   log_content: string;
+  log_file?: string;
 }
+
+// Available log files
+const LOG_FILES = [
+  "BackendLogs.log",
+  "execLogs.log",
+  "execOPT_Download.log",
+  "execOptCHN.log",
+  "execOptPCR.log"
+];
 
 const fetchAvailableDates = async (): Promise<string[]> => {
   try {
@@ -30,15 +42,15 @@ const fetchAvailableDates = async (): Promise<string[]> => {
   }
 };
 
-const fetchLogContent = async (date: string): Promise<string> => {
+const fetchLogContent = async (date: string, logFile: string): Promise<string> => {
   try {
     const response = await apiClient.get('/get_exec_log', {
-      params: { date }
+      params: { date, log_file: logFile }
     });
     const data: LogContentResponse = response.data;
     return data.log_content;
   } catch (error) {
-    console.error(`Error fetching log content for date ${date}:`, error);
+    console.error(`Error fetching log content for date ${date} and file ${logFile}:`, error);
     throw error;
   }
 };
@@ -55,6 +67,7 @@ const formatDateDisplay = (dateString: string): string => {
 
 const ExecutionLogs: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedLogFile, setSelectedLogFile] = useState<string>(LOG_FILES[0]);
   const [rawLogContent, setRawLogContent] = useState<string>('');
   const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
 
@@ -87,8 +100,8 @@ const ExecutionLogs: React.FC = () => {
     error: contentError,
     refetch: refetchLogContent
   } = useQuery({
-    queryKey: ['executionLogContent', selectedDate],
-    queryFn: () => fetchLogContent(selectedDate),
+    queryKey: ['executionLogContent', selectedDate, selectedLogFile],
+    queryFn: () => fetchLogContent(selectedDate, selectedLogFile),
     enabled: !!selectedDate && !usingFallbackData,
     meta: {
       onSettled: (_, error) => {
@@ -147,6 +160,10 @@ const ExecutionLogs: React.FC = () => {
     setSelectedDate(date);
   };
 
+  const handleLogFileChange = (logFile: string) => {
+    setSelectedLogFile(logFile);
+  };
+
   const effectiveDates = usingFallbackData ? [...fallbackDates] : [...(availableDates || [])];
   effectiveDates.sort((a, b) => {
     const dateA = a.length === 8 ? 
@@ -160,6 +177,14 @@ const ExecutionLogs: React.FC = () => {
 
   const handleRetry = () => {
     setUsingFallbackData(false);
+    refetchDates();
+    if (selectedDate) {
+      refetchLogContent();
+    }
+  };
+
+  const handleRefresh = () => {
+    toast.info("Refreshing data...");
     refetchDates();
     if (selectedDate) {
       refetchLogContent();
@@ -216,6 +241,16 @@ const ExecutionLogs: React.FC = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
+              
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <Select
@@ -230,6 +265,26 @@ const ExecutionLogs: React.FC = () => {
                     {effectiveDates && effectiveDates.map((date) => (
                       <SelectItem key={date} value={date}>
                         {formatDateDisplay(date)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={selectedLogFile}
+                  onValueChange={handleLogFileChange}
+                  disabled={isLoadingDates && !usingFallbackData}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select log file" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOG_FILES.map((logFile) => (
+                      <SelectItem key={logFile} value={logFile}>
+                        {logFile}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -256,7 +311,7 @@ const ExecutionLogs: React.FC = () => {
               </div>
             ) : (
               <pre className="p-4 font-mono text-sm whitespace-pre-wrap break-words">
-                {rawLogContent || "No log content available for the selected date."}
+                {rawLogContent || "No log content available for the selected date and log file."}
               </pre>
             )}
           </ScrollArea>
@@ -266,7 +321,7 @@ const ExecutionLogs: React.FC = () => {
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             <Clock className="h-4 w-4" />
             {selectedDate ? 
-              <>Selected date: {formatDateDisplay(selectedDate)} • Last update: {new Date().toLocaleTimeString()}{usingFallbackData ? " (Offline)" : ""}</> :
+              <>Selected: {formatDateDisplay(selectedDate)} • File: {selectedLogFile} • Last update: {new Date().toLocaleTimeString()}{usingFallbackData ? " (Offline)" : ""}</> :
               <>No date selected • Last update: {new Date().toLocaleTimeString()}</>
             }
           </p>
