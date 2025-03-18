@@ -23,6 +23,8 @@ import PCR from "@/pages/PCR";
 import OHLCAnalysis from "@/pages/OHLCAnalysis";
 import ExecutionLogs from "@/pages/ExecutionLogs";
 import StrikeDetail from "@/pages/StrikeDetail";
+import UserAccount from "@/pages/UserAccount";
+import Nifty50Constituents from "@/pages/Nifty50Constituents";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const AnimatedRoutes = () => {
       <Route path="/ohlc-analysis" element={<OHLCAnalysis />} />
       <Route path="/execution-logs" element={<ExecutionLogs />} />
       <Route path="/strike-detail/:symbol/:expiry/:strikePrice" element={<StrikeDetail />} />
+      <Route path="/user-account" element={<UserAccount />} />
+      <Route path="/nifty50-constituents" element={<Nifty50Constituents />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

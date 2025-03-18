@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
@@ -7,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LineChart, BarChart, PieChart, Activity, TrendingUp, Calendar, Eye, History, HelpCircle, FileText, CandlestickChart, Wallet, IndianRupee, RefreshCw, AlertTriangle, LineChartIcon, List } from 'lucide-react';
+import { LineChart, BarChart, PieChart, Activity, TrendingUp, Calendar, Eye, History, HelpCircle, FileText, CandlestickChart, Wallet, IndianRupee, RefreshCw, AlertTriangle, LineChartIcon, List, ArrowRight } from 'lucide-react';
 import apiClient from '@/utils/apiService';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 // Types for user PNL data
 interface DailyPNL {
@@ -94,7 +95,6 @@ const Home = () => {
     "APOLLOHOSP-EQ": { weightage: 0.50, token: "" }
   });
 
-  // Query for user PNL data
   const { 
     data: userPNLData, 
     isLoading: isLoadingPNL, 
@@ -168,7 +168,6 @@ const Home = () => {
     }
   ];
 
-  // Helper function to format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -203,7 +202,6 @@ const Home = () => {
             ))}
           </div>
           
-          {/* User Account & Wallet Details Card */}
           <Card className="card-hover shadow-md mt-6 border-t-4 border-t-primary">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -247,11 +245,10 @@ const Home = () => {
                           <TableHead>Date</TableHead>
                           <TableHead>P&L</TableHead>
                           <TableHead>Change</TableHead>
-                          <TableHead>Balance</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {userPNLData?.daily_pnl?.slice().reverse().map((day) => (
+                        {userPNLData?.daily_pnl?.slice().reverse().slice(0, 3).map((day) => (
                           <TableRow key={day.date}>
                             <TableCell className="font-medium">{day.date}</TableCell>
                             <TableCell className={day.pnl >= 0 ? "text-green-600" : "text-red-600"}>
@@ -260,14 +257,13 @@ const Home = () => {
                             <TableCell className={day.pnlPercentage >= 0 ? "text-green-600" : "text-red-600"}>
                               {day.pnlPercentage > 0 ? "+" : ""}{day.pnlPercentage}%
                             </TableCell>
-                            <TableCell>{formatCurrency(day.walletBalance)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </div>
                   
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex justify-between items-center">
                     <button
                       onClick={() => { 
                         toast.info("Refreshing account data..."); 
@@ -278,6 +274,14 @@ const Home = () => {
                       <RefreshCw className="h-3 w-3" />
                       Refresh
                     </button>
+                    
+                    <Link to="/user-account">
+                      <Button variant="link" className="text-xs h-auto p-0 gap-1" asChild>
+                        <div className="flex items-center">
+                          View Details <ArrowRight className="h-3 w-3" />
+                        </div>
+                      </Button>
+                    </Link>
                   </div>
                 </>
               )}
@@ -303,7 +307,6 @@ const Home = () => {
             ))}
           </div>
           
-          {/* Nifty 50 Constituents Card */}
           <Card className="card-hover shadow-md mt-6 border-t-4 border-t-primary">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -315,7 +318,7 @@ const Home = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[350px] pr-4">
+              <ScrollArea className="h-[270px] pr-4">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -326,6 +329,7 @@ const Home = () => {
                   <TableBody>
                     {Object.entries(nifty50Stocks)
                       .sort((a, b) => b[1].weightage - a[1].weightage)
+                      .slice(0, 10)
                       .map(([symbol, data]) => (
                         <TableRow key={symbol}>
                           <TableCell className="font-medium">{symbol.replace("-EQ", "")}</TableCell>
@@ -338,9 +342,18 @@ const Home = () => {
                 </Table>
               </ScrollArea>
               
-              <div className="mt-3 flex justify-between items-center text-xs text-muted-foreground">
-                <span>Total stocks: {Object.keys(nifty50Stocks).length}</span>
-                <span>Last updated: {new Date().toLocaleDateString()}</span>
+              <div className="mt-3 flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">
+                  Showing top 10 of {Object.keys(nifty50Stocks).length} stocks
+                </span>
+                
+                <Link to="/nifty50-constituents">
+                  <Button variant="link" className="text-xs h-auto p-0 gap-1" asChild>
+                    <div className="flex items-center">
+                      View All <ArrowRight className="h-3 w-3" />
+                    </div>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
