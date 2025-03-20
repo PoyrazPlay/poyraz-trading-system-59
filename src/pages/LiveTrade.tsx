@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon, ActivityIcon, CircleIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, BarChart3Icon, ChevronsUpDownIcon, TimerIcon, ActivityIcon, CircleIcon, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import apiClient from '@/utils/apiService';
 
-// Define type for LiveTradeData
 interface LiveTradeData {
   market_open: boolean;
   trade_status: string;
@@ -32,7 +32,6 @@ interface LiveTradeData {
   ohlc_colorString?: string;
 }
 
-// Demo data for development and testing
 const demoTradeData: LiveTradeData = {
   market_open: true,
   trade_status: "Active",
@@ -56,7 +55,6 @@ const demoTradeData: LiveTradeData = {
   ohlc_colorString: "GGRRRRRRRG"
 };
 
-// OHLC Color Indicator Component
 const OHLCColorIndicator = ({ colorString }: { colorString?: string }) => {
   if (!colorString) return null;
   
@@ -89,24 +87,24 @@ const LiveTrade = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get('/live_trade');
-        
-        setTradeData(response.data);
-        toast.success("Live trade data updated");
-      } catch (error) {
-        console.error('Error fetching live trade data:', error);
-        setError("Could not fetch live trade data. Using demo data instead.");
-        setTradeData(demoTradeData); // Use demo data on error
-        toast.error("Failed to fetch live data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/live_trade');
+      
+      setTradeData(response.data);
+      toast.success("Live trade data updated");
+    } catch (error) {
+      console.error('Error fetching live trade data:', error);
+      setError("Could not fetch live trade data. Using demo data instead.");
+      setTradeData(demoTradeData); // Use demo data on error
+      toast.error("Failed to fetch live data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
     // Set up polling for real-time updates
     const interval = setInterval(fetchData, 30000); // Update every 30 seconds
@@ -127,16 +125,13 @@ const LiveTrade = () => {
     );
   }
 
-  // Ensure we have data to display, use demo data as fallback
   const data = tradeData || demoTradeData;
   
-  // Calculate PnL color based on value
   const getPnlColor = (pnl: number | undefined) => {
     if (!pnl) return "text-muted-foreground";
     return pnl >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400";
   };
 
-  // Format currency values
   const formatCurrency = (value: number | undefined) => {
     if (value === undefined) return "N/A";
     return new Intl.NumberFormat('en-IN', {
@@ -147,7 +142,22 @@ const LiveTrade = () => {
   };
 
   return (
-    <HomeLayout title="Live Trading" subtitle="Real-time market data and active trades">
+    <HomeLayout 
+      title="Live Trading" 
+      subtitle="Real-time market data and active trades"
+      action={
+        <Button
+          onClick={() => {
+            toast.info("Refreshing live trade data...");
+            fetchData();
+          }}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Data
+        </Button>
+      }
+    >
       {error && (
         <Alert variant="destructive" className="mb-6 max-w-5xl mx-auto">
           <AlertTitle>Error</AlertTitle>
@@ -156,7 +166,6 @@ const LiveTrade = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-7xl mb-6">
-        {/* Market Status Card */}
         <Card className={`${data.market_open ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-rose-50 dark:bg-rose-900/20'} transition-all card-hover`}>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -171,7 +180,6 @@ const LiveTrade = () => {
           </CardContent>
         </Card>
 
-        {/* Trade Status Card - New separate card */}
         <Card className={`${data.trade_status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''} transition-all card-hover`}>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -186,7 +194,6 @@ const LiveTrade = () => {
           </CardContent>
         </Card>
 
-        {/* Index Price Card */}
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -208,7 +215,6 @@ const LiveTrade = () => {
           </CardContent>
         </Card>
 
-        {/* Trading Summary Card */}
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -241,7 +247,6 @@ const LiveTrade = () => {
         </Card>
       </div>
 
-      {/* Active Trade Details */}
       <Card className="w-full max-w-7xl card-hover">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
@@ -255,7 +260,6 @@ const LiveTrade = () => {
         <CardContent>
           <div className="overflow-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Trade Symbol Section */}
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Symbol</h3>
@@ -274,7 +278,6 @@ const LiveTrade = () => {
                 </div>
               </div>
 
-              {/* Price Section */}
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -303,12 +306,10 @@ const LiveTrade = () => {
             <Separator className="my-6" />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* OHLC Color String */}
               <div className="bg-card rounded-lg p-4 border shadow-sm">
                 <OHLCColorIndicator colorString={data.ohlc_colorString} />
               </div>
 
-              {/* Times Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Trade Times</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -327,7 +328,6 @@ const LiveTrade = () => {
                 </div>
               </div>
 
-              {/* Index Values Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Index Values</h3>
                 <div className="grid grid-cols-2 gap-4">

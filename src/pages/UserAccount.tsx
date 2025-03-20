@@ -18,6 +18,7 @@ interface DailyPNL {
   pnl: number;
   pnlPercentage: number;
   walletBalance: number;
+  accuracyPercentage?: number; // Added accuracyPercentage property
 }
 
 interface UserPNLResponse {
@@ -31,19 +32,22 @@ const fallbackPNLData: UserPNLResponse = {
       date: "2025-03-16",
       pnl: 18600,
       pnlPercentage: 4,
-      walletBalance: 570040
+      walletBalance: 570040,
+      accuracyPercentage: 64.0
     },
     {
       date: "2025-03-17",
       pnl: -10600,
       pnlPercentage: -2.8,
-      walletBalance: 559020
+      walletBalance: 559020,
+      accuracyPercentage: 33.0
     },
     {
       date: "2025-03-18",
       pnl: 32960,
       pnlPercentage: 9.2,
-      walletBalance: 590640
+      walletBalance: 590640,
+      accuracyPercentage: 77.0
     }
   ]
 };
@@ -231,6 +235,7 @@ const UserAccount = () => {
                     <TableHead>P&L</TableHead>
                     <TableHead>Change (%)</TableHead>
                     <TableHead>Balance</TableHead>
+                    <TableHead>Accuracy (%)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -244,6 +249,7 @@ const UserAccount = () => {
                         {day.pnlPercentage > 0 ? "+" : ""}{day.pnlPercentage}%
                       </TableCell>
                       <TableCell>{formatCurrency(day.walletBalance)}</TableCell>
+                      <TableCell>{day.accuracyPercentage?.toFixed(1) || "N/A"}%</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
