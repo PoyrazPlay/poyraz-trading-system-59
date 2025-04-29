@@ -9,7 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { FileText, AlertTriangle, RefreshCw, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { fallbackDates, getFallbackLogContent } from '@/utils/execLogsData';
-import apiClient from '@/utils/apiService';
+import apiClient, { getCurrentMachine } from '@/utils/apiService';
 import BackendSelector from '@/components/BackendSelector';
 
 interface DatesResponse {
@@ -241,13 +241,6 @@ const ExecutionLogs: React.FC = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              <BackendSelector onMachineChange={() => {
-                refetchDates();
-                if (selectedDate) {
-                  refetchLogContent();
-                }
-              }} />
-              
               <Button 
                 variant="outline" 
                 size="sm" 

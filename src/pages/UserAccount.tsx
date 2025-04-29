@@ -9,7 +9,7 @@ import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import apiClient from '@/utils/apiService';
+import apiClient, { getCurrentMachine } from '@/utils/apiService';
 
 // Types for user PNL data
 interface DailyPNL {
@@ -54,7 +54,6 @@ const fallbackPNLData: UserPNLResponse = {
 // Fetch user PNL data
 const fetchUserPNL = async (): Promise<UserPNLResponse> => {
   try {
-    const { getCurrentMachine } = await import('@/utils/apiService');
     const currentMachine = getCurrentMachine();
     const response = await apiClient.get(`/get_user_pnl?username=${currentMachine.username}`);
     return response.data;
@@ -109,7 +108,6 @@ const UserAccount = () => {
           <h1 className="text-3xl font-bold">User Account & Wallet Details</h1>
         </div>
         <div className="flex items-center gap-3">
-          <BackendSelector onMachineChange={() => refetchPNL()} />
           <Button 
             onClick={() => { 
               toast.info("Refreshing account data..."); 

@@ -28,6 +28,10 @@ const BackendSelector = ({ onMachineChange, className = '' }: BackendSelectorPro
       if (onMachineChange) {
         onMachineChange(machine);
       }
+
+      // Force page refresh to apply changes across the app
+      // This is a simple way to ensure all components use the new backend
+      window.location.reload();
     }
   };
 
