@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import apiClient from '@/utils/apiService';
 import BackendSelector from '@/components/BackendSelector';
+import { RefreshCw } from 'lucide-react';
 
 interface TradeDataPoint {
   Timestamp: string;
@@ -251,9 +252,16 @@ const HistTrades = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <BackendSelector onMachineChange={() => {
-              fetchAvailableDates();
-            }} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchAvailableDates()}
+              disabled={isLoading}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </Button>
           </div>
         </div>
 

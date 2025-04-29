@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronDown, ChevronUp, CircleIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, CircleIcon, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -167,7 +168,21 @@ const TodaysTrade = () => {
   };
 
   return (
-    <HomeLayout title="Today's Trades">
+    <HomeLayout 
+      title="Today's Trades"
+      action={
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => fetchTradesData()}
+          disabled={isLoading}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Refresh
+        </Button>
+      }
+    >
       <div className="card-glass rounded-xl p-6 w-full max-w-7xl">
         {isLoading ? (
           <div className="py-8 text-center">

@@ -147,22 +147,16 @@ const LiveTrade = () => {
       title="Live Trading" 
       subtitle="Real-time market data and active trades"
       action={
-        <div className="flex items-center gap-3">
-          <BackendSelector onMachineChange={() => {
-            toast.info("Switching backend and refreshing data...");
+        <Button
+          onClick={() => {
+            toast.info("Refreshing live trade data...");
             fetchData();
-          }} />
-          <Button
-            onClick={() => {
-              toast.info("Refreshing live trade data...");
-              fetchData();
-            }}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh Data
-          </Button>
-        </div>
+          }}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Data
+        </Button>
       }
     >
       {error && (
