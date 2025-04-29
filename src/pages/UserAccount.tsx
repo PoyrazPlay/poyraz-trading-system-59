@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Wallet, IndianRupee, RefreshCw, ArrowLeft } from 'lucide-react';
@@ -55,7 +54,9 @@ const fallbackPNLData: UserPNLResponse = {
 // Fetch user PNL data
 const fetchUserPNL = async (): Promise<UserPNLResponse> => {
   try {
-    const response = await apiClient.get('/get_user_pnl?username=faiizan');
+    const { getCurrentMachine } = await import('@/utils/apiService');
+    const currentMachine = getCurrentMachine();
+    const response = await apiClient.get(`/get_user_pnl?username=${currentMachine.username}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching user PNL:", error);
@@ -107,16 +108,19 @@ const UserAccount = () => {
           </Link>
           <h1 className="text-3xl font-bold">User Account & Wallet Details</h1>
         </div>
-        <Button 
-          onClick={() => { 
-            toast.info("Refreshing account data..."); 
-            refetchPNL(); 
-          }}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh Data
-        </Button>
+        <div className="flex items-center gap-3">
+          <BackendSelector onMachineChange={() => refetchPNL()} />
+          <Button 
+            onClick={() => { 
+              toast.info("Refreshing account data..."); 
+              refetchPNL(); 
+            }}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh Data
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

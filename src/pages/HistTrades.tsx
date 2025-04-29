@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import apiClient from '@/utils/apiService';
+import BackendSelector from '@/components/BackendSelector';
 
 interface TradeDataPoint {
   Timestamp: string;
@@ -231,22 +231,30 @@ const HistTrades = () => {
   return (
     <HomeLayout title="Historical Trades">
       <div className="card-glass rounded-xl p-6 w-full max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-          <label htmlFor="date-select" className="text-sm font-medium">
-            Select Date:
-          </label>
-          <select 
-            id="date-select" 
-            value={selectedDate} 
-            onChange={handleDateChange}
-            className="bg-background border border-input px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            disabled={isLoading}
-          >
-            <option value="">--Select a date--</option>
-            {dates.map(date => (
-              <option key={date} value={date}>{date}</option>
-            ))}
-          </select>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <label htmlFor="date-select" className="text-sm font-medium">
+              Select Date:
+            </label>
+            <select 
+              id="date-select" 
+              value={selectedDate} 
+              onChange={handleDateChange}
+              className="bg-background border border-input px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isLoading}
+            >
+              <option value="">--Select a date--</option>
+              {dates.map(date => (
+                <option key={date} value={date}>{date}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <BackendSelector onMachineChange={() => {
+              fetchAvailableDates();
+            }} />
+          </div>
         </div>
 
         {isLoading ? (

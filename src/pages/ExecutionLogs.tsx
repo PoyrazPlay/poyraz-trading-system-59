@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
@@ -11,6 +10,7 @@ import { FileText, AlertTriangle, RefreshCw, Clock, Calendar } from 'lucide-reac
 import { toast } from 'sonner';
 import { fallbackDates, getFallbackLogContent } from '@/utils/execLogsData';
 import apiClient from '@/utils/apiService';
+import BackendSelector from '@/components/BackendSelector';
 
 interface DatesResponse {
   exec_dates: string[];
@@ -241,6 +241,13 @@ const ExecutionLogs: React.FC = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
+              <BackendSelector onMachineChange={() => {
+                refetchDates();
+                if (selectedDate) {
+                  refetchLogContent();
+                }
+              }} />
+              
               <Button 
                 variant="outline" 
                 size="sm" 

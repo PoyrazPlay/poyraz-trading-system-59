@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import apiClient from '@/utils/apiService';
+import BackendSelector from '@/components/BackendSelector';
 
 interface LiveTradeData {
   market_open: boolean;
@@ -146,16 +147,22 @@ const LiveTrade = () => {
       title="Live Trading" 
       subtitle="Real-time market data and active trades"
       action={
-        <Button
-          onClick={() => {
-            toast.info("Refreshing live trade data...");
+        <div className="flex items-center gap-3">
+          <BackendSelector onMachineChange={() => {
+            toast.info("Switching backend and refreshing data...");
             fetchData();
-          }}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh Data
-        </Button>
+          }} />
+          <Button
+            onClick={() => {
+              toast.info("Refreshing live trade data...");
+              fetchData();
+            }}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh Data
+          </Button>
+        </div>
       }
     >
       {error && (
