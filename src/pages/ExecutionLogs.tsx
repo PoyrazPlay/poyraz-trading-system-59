@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import HomeLayout from '@/components/layout/HomeLayout';
@@ -24,11 +25,11 @@ interface LogContentResponse {
 
 // Available log files
 const LOG_FILES = [
-  "BackendLogs.log",
-  "execLogs.log",
-  "execOPT_Download.log",
-  "execOptCHN.log",
-  "execOptPCR.log"
+  "EXEC_POYRAZ.log",
+  "EXEC_OPTCHN.log",
+  "EXEC_OPTOHLC.log",
+  "EXEC_OPTPCR.log",
+  "EXEC_UI.log"
 ];
 
 const fetchAvailableDates = async (): Promise<string[]> => {
