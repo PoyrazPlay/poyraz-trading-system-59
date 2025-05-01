@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import HomeLayout from '@/components/layout/HomeLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,8 @@ interface OHLCData {
     atr: number;
     ha_color: string;
     volatility_bbw: number;
+    AvgSum: number;
+    AvgStd: number;
     Adx_slope: number;
   }
 }
@@ -44,6 +47,8 @@ const demoData: OHLCData = {
     atr: 32.19,
     ha_color: "red",
     volatility_bbw: 0.35,
+    AvgSum: 12.45,
+    AvgStd: 3.21,
     Adx_slope: 81.21
   },
   "2025-03-13 09:20:00": {
@@ -54,6 +59,8 @@ const demoData: OHLCData = {
     atr: 31.66,
     ha_color: "red",
     volatility_bbw: 0.31,
+    AvgSum: 10.98,
+    AvgStd: 2.87,
     Adx_slope: 73.76
   },
   "2025-03-13 09:25:00": {
@@ -64,6 +71,8 @@ const demoData: OHLCData = {
     atr: 30.0,
     ha_color: "green",
     volatility_bbw: 0.28,
+    AvgSum: 9.75,
+    AvgStd: 2.54,
     Adx_slope: 68.5
   }
 };
@@ -240,6 +249,8 @@ const OHLCAnalysis: React.FC = () => {
                   <th className="py-3 px-2 text-right font-medium">Close</th>
                   <th className="py-3 px-2 text-right font-medium">ATR</th>
                   <th className="py-3 px-2 text-right font-medium">BB Width</th>
+                  <th className="py-3 px-2 text-right font-medium">Avg Sum</th>
+                  <th className="py-3 px-2 text-right font-medium">Avg Std</th>
                   <th className="py-3 px-2 text-right font-medium">ADX Slope</th>
                   <th className="py-3 px-2 text-center font-medium">HA Color</th>
                 </tr>
@@ -255,6 +266,8 @@ const OHLCAnalysis: React.FC = () => {
                       <td className="py-2 px-2 text-right">{row.close.toFixed(2)}</td>
                       <td className="py-2 px-2 text-right">{row.atr.toFixed(2)}</td>
                       <td className="py-2 px-2 text-right">{row.volatility_bbw.toFixed(3)}</td>
+                      <td className="py-2 px-2 text-right">{row.AvgSum.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right">{row.AvgStd.toFixed(2)}</td>
                       <td className="py-2 px-2 text-right">{row.Adx_slope.toFixed(2)}</td>
                       <td className="py-2 px-2 text-center">
                         <div 
@@ -266,7 +279,7 @@ const OHLCAnalysis: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={9} className="py-6 text-center text-muted-foreground">
+                    <td colSpan={11} className="py-6 text-center text-muted-foreground">
                       No data available for the selected date and interval.
                     </td>
                   </tr>
