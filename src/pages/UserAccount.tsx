@@ -339,7 +339,7 @@ const UserAccount = () => {
                       <TableHead>Balance</TableHead>
                       <TableHead>Accuracy (%)</TableHead>
                       <TableHead>Strategy</TableHead>
-                      <TableHead>Volatility (Std)</TableHead>
+                      <TableHead>Volatility (Std/Sum)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -357,9 +357,9 @@ const UserAccount = () => {
                         <TableCell>{day.Strategy || "N/A"}</TableCell>
                         <TableCell>
                           {day.volatility ? (
-                            `M: ${day.volatility.Morning.std.toFixed(2)} | 
-                             A: ${day.volatility.Afternoon.std.toFixed(2)} | 
-                             E: ${day.volatility.Evening.std.toFixed(2)}`
+                            `M: ${day.volatility.Morning.std.toFixed(2)}/${day.volatility.Morning.sum.toFixed(2)} | 
+                             A: ${day.volatility.Afternoon.std.toFixed(2)}/${day.volatility.Afternoon.sum.toFixed(2)} | 
+                             E: ${day.volatility.Evening.std.toFixed(2)}/${day.volatility.Evening.sum.toFixed(2)}`
                           ) : "N/A"}
                         </TableCell>
                       </TableRow>
